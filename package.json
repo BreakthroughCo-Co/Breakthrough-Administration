@@ -1,0 +1,35 @@
+{
+  "name": "google-workspace-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.0.3",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "motion": "^11.11.17",
+    "lucide-react": "^0.460.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5",
+    "zustand": "^5.0.1",
+    "firebase": "^11.0.2",
+    "@google/genai": "^0.1.2",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "typescript": "^5",
+    "tailwindcss": "^4.0.0-beta.1",
+    "@tailwindcss/postcss": "^4.0.0-beta.1",
+    "postcss": "^8.4.49",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.3"
+  }
+}
