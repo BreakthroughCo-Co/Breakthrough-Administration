@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { signInWithGoogle, getCachedAccessToken, auth } from '@/lib/firebase';
 import { PhasedRolloutModal } from '@/components/PhasedRolloutModal';
+import { BranchManagementModal } from '@/components/BranchManagementModal';
+import { OfflineSyncModal } from '@/components/OfflineSyncModal';
 
 export const Header: React.FC = () => {
   const {
@@ -53,6 +55,8 @@ export const Header: React.FC = () => {
 
   const [showNotifPopover, setShowNotifPopover] = useState(false);
   const [isRolloutModalOpen, setIsRolloutModalOpen] = useState(false);
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
 
   const unreadCount = notifications.filter((n: AppNotification) => !n.read).length;
 
@@ -91,40 +95,37 @@ export const Header: React.FC = () => {
                 <span>Firestore Synced</span>
               </div>
 
-            {/* Offline Status & Sync Trigger */}
+            {/* Offline Status & Sync Trigger Modal Launcher */}
             {isOffline ? (
               <button
-                onClick={() => {
-                  setIsOffline(false);
-                  syncOfflineQueue();
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse"
-                title="App is running in offline mode. Click to simulate network reconnect & sync."
+                onClick={() => setIsOfflineModalOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse cursor-pointer hover:bg-amber-500/25 transition-all"
+                title="App is running in offline mode. Click to open Sync & Storage Manager."
               >
                 <WifiOff className="w-3 h-3 text-amber-400" />
                 <span>Offline ({offlineQueue.filter((q) => q.status === 'PENDING').length} queued)</span>
               </button>
             ) : offlineQueue.some((q) => q.status === 'PENDING') ? (
               <button
-                onClick={syncOfflineQueue}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30 hover:bg-teal-500/25 transition-colors"
-                title="Pending records in offline queue. Click to sync."
+                onClick={() => setIsOfflineModalOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30 hover:bg-teal-500/25 transition-colors cursor-pointer"
+                title="Pending records in offline queue. Click to open Sync Manager."
               >
                 <RefreshCw className="w-3 h-3 text-teal-400 animate-spin" />
                 <span>Sync ({offlineQueue.filter((q) => q.status === 'PENDING').length})</span>
               </button>
             ) : (
               <button
-                onClick={() => setIsOffline(true)}
-                className="hidden xl:flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700 transition-colors"
-                title="Click to simulate offline field visit mode"
+                onClick={() => setIsOfflineModalOpen(true)}
+                className="hidden xl:flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
+                title="Click to open Offline PWA & Storage Engine"
               >
                 <Wifi className="w-3 h-3 text-emerald-400" />
-                <span>Online</span>
+                <span>Online (PWA)</span>
               </button>
             )}
 
-            {/* Multi-Clinic Branch Switcher */}
+            {/* Multi-Clinic Branch Switcher & Management Launcher */}
             <div className="hidden 2xl:flex items-center gap-1.5 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800 text-[10px]">
               <Building2 className="w-3 h-3 text-teal-400 shrink-0" />
               <select
@@ -138,6 +139,14 @@ export const Header: React.FC = () => {
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setIsBranchModalOpen(true)}
+                className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold hover:text-white transition-colors cursor-pointer"
+                title="Manage practice branches and regional hubs"
+              >
+                Manage
+              </button>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 hidden lg:block">
@@ -318,6 +327,8 @@ export const Header: React.FC = () => {
       </div>
     </header>
     <PhasedRolloutModal isOpen={isRolloutModalOpen} onClose={() => setIsRolloutModalOpen(false)} />
+    <BranchManagementModal isOpen={isBranchModalOpen} onClose={() => setIsBranchModalOpen(false)} />
+    <OfflineSyncModal isOpen={isOfflineModalOpen} onClose={() => setIsOfflineModalOpen(false)} />
   </>
   );
 };

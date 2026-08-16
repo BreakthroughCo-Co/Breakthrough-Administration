@@ -203,8 +203,12 @@ interface ManagementState {
   generateCommissionAuditPackage: (participantId: string) => NDISCommissionAuditPackage;
   addExtractedReport: (report: Omit<ExtractedClinicalReport, 'id'>) => void;
   transferReportToBsp: (reportId: string, clientId: string) => void;
+  addClinicBranch: (branch: ClinicBranch) => void;
+  updateClinicBranch: (id: string, updates: Partial<ClinicBranch>) => void;
+  deleteClinicBranch: (id: string) => void;
   addOfflineQueueItem: (item: Omit<OfflineSyncQueueItem, 'id' | 'createdAt' | 'status'>) => void;
   syncOfflineQueue: () => Promise<void>;
+  clearSyncedOfflineQueue: () => void;
   addAuditLog: (action: string, entity: string, entityId: string, details: string) => void;
   addCommunication: (comm: Omit<CommunicationLog, 'id' | 'timestamp'>) => void;
 }
@@ -799,6 +803,26 @@ ${
     get().addAuditLog('Transferred Report to BSP', 'BSPDocument', clientId, `Integrated medical report ${report.fileName} into BSP`);
   },
 
+  addClinicBranch: (branchData) => {
+    set((state) => ({ clinics: [...state.clinics, branchData] }));
+    get().addAuditLog('Registered Clinic Branch', 'ClinicBranch', branchData.id, `Created branch ${branchData.name} (${branchData.code})`);
+  },
+
+  updateClinicBranch: (id, updates) => {
+    set((state) => ({
+      clinics: state.clinics.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+    }));
+    get().addAuditLog('Updated Clinic Branch', 'ClinicBranch', id, `Updated branch details for ${id}`);
+  },
+
+  deleteClinicBranch: (id) => {
+    set((state) => ({
+      clinics: state.clinics.filter((c) => c.id !== id),
+      currentClinicId: state.currentClinicId === id ? state.clinics[0]?.id || '' : state.currentClinicId,
+    }));
+    get().addAuditLog('Deleted Clinic Branch', 'ClinicBranch', id, `Removed branch ${id} from directory`);
+  },
+
   addOfflineQueueItem: (itemData) => {
     const newItem: OfflineSyncQueueItem = {
       ...itemData,
@@ -833,6 +857,12 @@ ${
       severity: 'info',
       linkTab: 'audit-logs',
     });
+  },
+
+  clearSyncedOfflineQueue: () => {
+    set((state) => ({
+      offlineQueue: state.offlineQueue.filter((i) => i.status === 'PENDING'),
+    }));
   },
 
   addAuditLog: (action, entity, entityId, details) => {
