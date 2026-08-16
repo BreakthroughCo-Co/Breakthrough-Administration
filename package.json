@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types scripts/run-bsp-tests.ts",
+    "test:bsp": "node --experimental-strip-types scripts/run-bsp-tests.ts"
   },
   "dependencies": {
     "next": "15.0.3",
@@ -18,7 +20,7 @@
     "tailwind-merge": "^2.5.5",
     "zustand": "^5.0.1",
     "firebase": "^11.0.2",
-    "@google/genai": "^0.1.2",
+    "@google/genai": "latest",
     "date-fns": "^4.1.0"
   },
   "devDependencies": {

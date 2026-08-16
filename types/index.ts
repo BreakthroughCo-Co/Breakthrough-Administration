@@ -1,3 +1,5 @@
+export * from './bsp-audit';
+
 export type UserRole = 'ADMIN' | 'PRACTITIONER' | 'VIEWER';
 
 export interface UserProfile {
@@ -81,13 +83,18 @@ export interface RestrictivePractice {
   practiceType: 'Chemical' | 'Mechanical' | 'Physical' | 'Environmental' | 'Seclusion';
   description: string;
   status: 'Proposed' | 'Authorized' | 'Active' | 'Superseded' | 'Expired';
-  authorizationBody: string; // e.g. "VIC Senior Practitioner"
-  authorizationReference: string;
-  startDate: string;
-  expiryDate: string;
-  reductionPlanSummary: string;
-  monthlyReportStatus: 'Submitted' | 'Due' | 'Overdue';
+  authorizationBody?: string; // e.g. "VIC Senior Practitioner"
+  authorizationReference?: string;
+  startDate?: string;
+  expiryDate?: string;
+  reductionPlanSummary?: string;
+  monthlyReportStatus?: 'Submitted' | 'Due' | 'Overdue';
   lastReportedDate?: string;
+  clinicalRationale?: string;
+  leastRestrictiveAlternativesTried?: string[];
+  prohibitedRiskAssessment?: string;
+  prescribingPractitionerName?: string;
+  reviewCadenceMonths?: number;
 }
 
 export interface Incident {
@@ -160,6 +167,7 @@ export interface ABCLog {
   clientName: string;
   timestamp: string;
   timeOfDay: string; // HH:mm
+  hourOfDay?: number;
   dayOfWeek: string;
   antecedent: string;
   behavior: string;
@@ -168,15 +176,85 @@ export interface ABCLog {
   durationMinutes: number;
   location: string;
   perceivedFunction: 'Escape/Avoidance' | 'Attention/Social' | 'Tangible/Access' | 'Sensory/Automatic';
+  settingEvent?: string;
+  sensoryTriggers?: string[];
+  deescalationAttempted?: string;
   recordedBy: string;
+}
+
+export interface BSPParticipantProfile {
+  communicationMode?: string;
+  sensoryPreferences?: string[];
+  strengthsAndInterests?: string[];
+  medicalHealthFactors?: string;
+  decisionMakingPreferences?: string;
+  traumaHistorySummary?: string;
+  ndisPlanGoalsAlignment?: string;
+}
+
+export interface BSPTargetBehavior {
+  behavior: string;
+  operationalDefinition: string;
+  severity: number; // 1-5
+  frequency?: string;
+  duration?: string;
+  baselineIntensity?: string;
+}
+
+export interface BSPFunctionalAssessment {
+  targetBehaviors?: BSPTargetBehavior[];
+  settingEvents?: string[];
+  immediateTriggers?: string[];
+  maintainingConsequences?: string[];
+  functionalHypothesis?: string;
+  hypothesizedFunctions?: Array<'Escape/Avoidance' | 'Attention/Social' | 'Tangible/Access' | 'Sensory/Automatic'>;
+}
+
+export interface BSPReplacementBehavior {
+  target: string;
+  replacement: string;
+  teachingMethod: string;
+  functionalEquivalence?: string;
+}
+
+export interface BSPSkillTeaching {
+  replacementBehaviors?: BSPReplacementBehavior[];
+  functionalCommunicationTraining?: string;
+  reinforcementSchedule?: string;
+  generalizationStrategies?: string[];
+}
+
+export interface BSPActiveReactive {
+  earlyWarningSigns?: string[];
+  activeDeescalationStrategies?: string[];
+  reactiveProtocols?: string[];
+  postIncidentDebrief?: string;
+  postCrisisRecoveryPeriodMinutes?: number;
+}
+
+export interface BSPConsultationRecord {
+  date: string;
+  attendeeRoles: string[];
+  participantInvolvementModality: string;
+  nomineeConsentVerified: boolean;
+  notes?: string;
+}
+
+export interface BSPStaffGovernance {
+  curriculumSummary?: string;
+  apoSubmissionDate?: string;
+  annualReviewDueDate?: string;
+  leadPractitionerName?: string;
+  monitoringFrequency?: string;
+  authorisationReferences?: string[];
 }
 
 export interface BSPDocument {
   id: string;
   clientId: string;
   clientName: string;
-  version: string; // e.g. "v1.2"
-  status: 'Draft' | 'Panel Review' | 'Submitted to NDIS' | 'Active' | 'Superseded';
+  version: string; // e.g. "v1.2", "v2.1"
+  status: 'Draft' | 'Panel Review' | 'Submitted to NDIS' | 'Active' | 'Superseded' | 'Published';
   summary: string;
   primaryBehaviorsOfConcern: string[];
   proactiveStrategies: string[];
@@ -185,6 +263,16 @@ export interface BSPDocument {
   reviewDate: string;
   authorName: string;
   lastUpdated: string;
+  // Enhanced clinical modules
+  participantProfile?: BSPParticipantProfile;
+  functionalAssessment?: BSPFunctionalAssessment;
+  fba?: BSPFunctionalAssessment;
+  skillTeaching?: BSPSkillTeaching;
+  activeReactive?: BSPActiveReactive;
+  consultationRecords?: BSPConsultationRecord[];
+  staffTrainingAndGovernance?: BSPStaffGovernance;
+  complianceScore?: number;
+  missingComplianceItems?: string[];
 }
 
 export interface NDISSupportItem {
@@ -201,7 +289,7 @@ export interface BillingClaim {
   clientName: string;
   ndisNumber: string;
   serviceDate: string;
-  ndisSupportItem: string; // e.g. "07_002_0115_8_3 - Specialist Behavioural Intervention"
+  ndisSupportItem: string;
   supportItemCode: string;
   hours: number;
   unitRate: number;
@@ -248,3 +336,123 @@ export interface AppNotification {
   linkTab?: string;
 }
 
+export interface RestrictivePracticeUsageLog {
+  id: string;
+  practiceId: string;
+  clientId: string;
+  clientName: string;
+  practiceType: 'Chemical' | 'Mechanical' | 'Physical' | 'Environmental' | 'Seclusion';
+  timestamp: string;
+  durationMinutes: number;
+  antecedentTrigger: string;
+  priorDeescalationTried: string;
+  staffPresent: string[];
+  authorizedBy: string;
+  debriefCompleted: boolean;
+  notes: string;
+  reportedToCommission: boolean;
+}
+
+export interface NDISMonthlyReturnRecord {
+  id: string;
+  month: string; // YYYY-MM
+  clientId: string;
+  clientName: string;
+  ndisNumber: string;
+  practiceCount: number;
+  totalDurationMinutes: number;
+  status: 'Draft' | 'Submitted' | 'Late';
+  submittedDate?: string;
+}
+
+export interface PRODABatch {
+  id: string;
+  batchNumber: string;
+  createdDate: string;
+  claimCount: number;
+  totalAmount: number;
+  status: 'Ready' | 'Submitted' | 'Processed' | 'Errors';
+  claims: BillingClaim[];
+}
+
+export interface GoogleDriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink: string;
+  modifiedTime: string;
+  size?: string;
+}
+
+export interface GoogleCalendarEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+  location?: string;
+}
+
+export interface AICopilotMessage {
+  id: string;
+  sender: 'user' | 'assistant' | 'system';
+  text: string;
+  timestamp: string;
+  metadata?: any;
+}
+
+export interface ClinicalAssessmentRecord {
+  id: string;
+  clientId: string;
+  toolName: string; // e.g. "QABF", "MAS", "FAST", "VINELAND-3"
+  date: string;
+  administeredBy: string;
+  scores: Record<string, any>;
+  primaryFunctionIdentified?: string;
+  notes: string;
+}
+
+export interface PracticeBrandingConfig {
+  practiceName: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  ndisRegistrationNumber: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+export interface NDISCommissionAuditPackage {
+  id: string;
+  bspId: string;
+  clientId: string;
+  generatedDate: string;
+  status: 'Ready for Review' | 'Submitted' | 'Approved';
+  complianceScore: number;
+  flags: string[];
+}
+
+export interface ClinicBranch {
+  id: string;
+  name: string;
+  state: string;
+  address: string;
+  phone: string;
+}
+
+export interface ExtractedClinicalReport {
+  id: string;
+  documentName: string;
+  uploadDate: string;
+  extractedSections: Record<string, string>;
+  confidenceScore: number;
+}
+
+export interface OfflineSyncQueueItem {
+  id: string;
+  timestamp: string;
+  entity: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  payload: any;
+  status: 'Pending' | 'Syncing' | 'Failed';
+}

@@ -18,6 +18,7 @@ import {
   Layers,
   UserCheck,
   Brain,
+  BrainCircuit,
   ShieldAlert,
   ArrowRight,
   TrendingDown,
@@ -28,6 +29,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { BSPAuditStudioModal } from './BSPAuditStudioModal';
 
 type BSPStudioSection =
   | 'profile'
@@ -57,6 +59,7 @@ export const BSPModule: React.FC = () => {
   const [generationNotice, setGenerationNotice] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<BSPDocument | null>(null);
+  const [isAuditStudioOpen, setIsAuditStudioOpen] = useState(false);
 
   // Active or draft BSP for selected participant
   const activeBsp =
@@ -535,6 +538,15 @@ Provide a strictly valid JSON object with the following schema:
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <button
+            onClick={() => setIsAuditStudioOpen(true)}
+            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-teal-600 hover:from-purple-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95 border border-purple-500/30"
+            title="Launch Autonomous BSP Quality Audit Studio"
+          >
+            <BrainCircuit className="w-4 h-4 text-purple-200 animate-pulse" />
+            <span>Launch AI Quality Audit Studio</span>
+          </button>
+
+          <button
             onClick={handleGenerateAiBsp}
             disabled={isGenerating}
             className="px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95 disabled:opacity-50"
@@ -600,13 +612,23 @@ Provide a strictly valid JSON object with the following schema:
         </div>
 
         {/* Real-time Compliance Auditor */}
-        <div className={`bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between ${
-          auditResult.score >= 90 ? 'compliance-badge-green' : auditResult.score >= 70 ? 'compliance-badge-amber' : 'compliance-badge-red'
-        }`}>
+        <div
+          onClick={() => setIsAuditStudioOpen(true)}
+          className={`bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all group ${
+            auditResult.score >= 90 ? 'compliance-badge-green' : auditResult.score >= 70 ? 'compliance-badge-amber' : 'compliance-badge-red'
+          }`}
+          title="Click to open Autonomous BSP Quality Audit Studio"
+        >
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              NDIS Commission Compliance Score
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                NDIS Commission Compliance Score
+              </span>
+              <span className="text-[10px] text-teal-400 font-bold group-hover:underline flex items-center gap-0.5">
+                <span>• Open Studio</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span
                 className={`text-3xl font-extrabold font-mono ${
@@ -628,10 +650,10 @@ Provide a strictly valid JSON object with the following schema:
               </span>
             </div>
             <p className="text-[10px] text-slate-500 mt-1">
-              Evaluated against NDIS Quality & Safeguards PBS Capability Framework 2026.
+              Evaluated against NDIS Quality & Safeguards PBS Capability Framework 2026. Click to launch studio.
             </p>
           </div>
-          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 shrink-0">
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 shrink-0 group-hover:border-teal-500/40 transition-colors">
             {auditResult.score >= 70
               ? <CheckCircle2 className="w-7 h-7 text-emerald-400" />
               : <AlertTriangle className="w-7 h-7 text-rose-400" />}
@@ -1425,6 +1447,13 @@ Provide a strictly valid JSON object with the following schema:
           </div>
         </div>
       )}
+
+      {/* Autonomous Multi-Agent BSP Quality Audit Studio Modal */}
+      <BSPAuditStudioModal
+        isOpen={isAuditStudioOpen}
+        onClose={() => setIsAuditStudioOpen(false)}
+        initialBsp={activeBsp}
+      />
     </div>
   );
 };

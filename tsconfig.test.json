@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "outDir": "./dist-test",
+    "rootDir": "."
+  },
+  "include": [
+    "types/**/*",
+    "lib/bsp-auditor/**/*",
+    "app/api/bsp-audit/**/*",
+    "tests/**/*"
+  ]
+}
