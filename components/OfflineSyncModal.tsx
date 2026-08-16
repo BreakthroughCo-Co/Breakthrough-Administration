@@ -291,7 +291,7 @@ export const OfflineSyncModal: React.FC<OfflineSyncModalProps> = ({ isOpen, onCl
                             {item.payload?.clientName || item.payload?.title || item.id}
                           </td>
                           <td className="p-3 font-mono text-slate-400 text-[11px]">
-                            {new Date(item.createdAt).toLocaleTimeString()}
+                            {new Date(item.createdAt || item.timestamp || Date.now()).toLocaleTimeString()}
                           </td>
                           <td className="p-3">
                             <span

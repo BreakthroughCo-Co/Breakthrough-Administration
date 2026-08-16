@@ -866,6 +866,9 @@ Return a valid JSON object with:
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
       {/* TAB 4: STANDARDISED CLINICAL ASSESSMENTS (STAGE 1 CLINICAL POWERHOUSE) */}
       {activeTab === 'assessments' && (
         <div className="space-y-6 animate-fadeIn">
@@ -1251,7 +1254,7 @@ Provide:
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px]">
-                      {ass.domainScores.map((ds, idx) => (
+                      {ass.domainScores?.map((ds, idx) => (
                         <div key={idx} className="p-2 bg-slate-900 rounded-lg border border-slate-800">
                           <span className="text-slate-400 block text-[10px] truncate" title={ds.domainName}>
                             {ds.domainName}

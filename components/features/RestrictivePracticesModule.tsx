@@ -143,7 +143,7 @@ export const RestrictivePracticesModule: React.FC = () => {
       priorDeescalationTried:
         usageDeescalation || 'Visual calming cues and quiet corner redirect attempted.',
       staffPresent: usageStaff ? usageStaff.split(',').map((s) => s.trim()) : [currentUser.name],
-      authorizedBy: practice.authorizationBody,
+      authorizedBy: practice.authorizationBody || 'VIC Senior Practitioner',
       debriefCompleted: usageDebrief,
       notes: usageNotes || 'Maintained as per Authorized BSP Protocol.',
       reportedToCommission: true,
@@ -177,8 +177,8 @@ export const RestrictivePracticesModule: React.FC = () => {
       `"${record.authorizationReference}"`,
       record.totalUsageInstances,
       record.totalDurationMinutes,
-      `"${record.reductionProgressNote.replace(/"/g, '""')}"`,
-      `"${record.submissionStatus}"`,
+      `"${(record.reductionProgressNote || '').replace(/"/g, '""')}"`,
+      `"${record.submissionStatus || 'Draft'}"`,
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -309,7 +309,7 @@ export const RestrictivePracticesModule: React.FC = () => {
               No restrictive practice authorizations registered for the selected participant. Click &quot;Register New Authorization&quot; to add one.
             </div>
           ) : filteredPractices.map((practice: RestrictivePractice) => {
-            const daysRemaining = getDaysRemaining(practice.expiryDate);
+            const daysRemaining = getDaysRemaining(practice.expiryDate || '');
             const clientObj = clients.find((c) => c.id === practice.clientId);
 
             return (

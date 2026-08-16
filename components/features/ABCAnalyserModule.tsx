@@ -662,7 +662,7 @@ Provide a concise 2-paragraph Predictive Escalation Risk Forecast:
                 <span>Duration: {log.durationMinutes} mins</span>
               </div>
             </div>
-          )}
+          )))}
         </div>
       </div>
 

@@ -62,7 +62,7 @@ export const BSPAuditStudioModal: React.FC<BSPAuditStudioModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<StudioTab>('scorecard');
   const [currentBsp, setCurrentBsp] = useState<BSPDocument>(
-    initialBsp || bspDocuments[0]
+    (initialBsp || (bspDocuments[0] as any))
   );
   const [auditPackage, setAuditPackage] = useState<BSPAuditPackage | null>(null);
   const [isAuditing, setIsAuditing] = useState<boolean>(true);
@@ -74,7 +74,7 @@ export const BSPAuditStudioModal: React.FC<BSPAuditStudioModalProps> = ({
     if (initialBsp) {
       setCurrentBsp(initialBsp);
     } else if (bspDocuments.length > 0) {
-      setCurrentBsp(bspDocuments[0]);
+      setCurrentBsp(bspDocuments[0] as any);
     }
   }, [initialBsp, bspDocuments]);
 

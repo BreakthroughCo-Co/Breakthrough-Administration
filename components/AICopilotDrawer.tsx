@@ -306,6 +306,28 @@ Provide a concise, clinically accurate, and actionable answer. If appropriate, f
                       {msg.content}
                     </div>
 
+                    {!isUser && msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-900">
+                        {msg.suggestedActions.map((act, aIdx) => (
+                          <button
+                            key={aIdx}
+                            onClick={() => {
+                              if (act.actionType === 'NAVIGATE' && act.payload) {
+                                setActiveTab(act.payload as TabType);
+                                setAICopilotOpen(false);
+                              } else if (act.actionType === 'INSERT_NOTE') {
+                                handleCopy(msg.id, msg.content || msg.text || '');
+                              }
+                            }}
+                            className="px-2 py-0.5 bg-teal-950/60 hover:bg-teal-900 border border-teal-500/30 text-teal-300 rounded text-[10px] font-medium flex items-center gap-1 transition-all"
+                          >
+                            <Zap className="w-2.5 h-2.5 text-teal-400" />
+                            <span>{act.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {!isUser && (
                       <div className="flex items-center justify-between pt-2 border-t border-slate-900 text-[10px] text-slate-500">
                         <span className="font-mono">
@@ -313,7 +335,7 @@ Provide a concise, clinically accurate, and actionable answer. If appropriate, f
                         </span>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleCopy(msg.id, msg.content)}
+                            onClick={() => handleCopy(msg.id, msg.content || msg.text || '')}
                             className="text-slate-400 hover:text-teal-300 flex items-center gap-1 transition-all"
                           >
                             {copiedId === msg.id ? (

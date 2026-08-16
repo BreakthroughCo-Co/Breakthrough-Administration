@@ -241,8 +241,8 @@ export interface RemediationPatchResult {
 
 export interface RestrictivePractice {
   id: string;
-  clientId: string;
-  clientName: string;
+  clientId?: string;
+  clientName?: string;
   practiceType: 'Chemical' | 'Mechanical' | 'Physical' | 'Environmental' | 'Seclusion';
   description: string;
   status: 'Proposed' | 'Authorized' | 'Active' | 'Superseded' | 'Expired';
@@ -254,9 +254,12 @@ export interface RestrictivePractice {
   monthlyReportStatus?: 'Submitted' | 'Due' | 'Overdue';
   lastReportedDate?: string;
   clinicalRationale?: string;
+  leastRestrictiveRationale?: string;
   leastRestrictiveAlternativesTried?: string[];
   prohibitedRiskAssessment?: string;
   prescribingPractitionerName?: string;
+  fadingReviewDate?: string;
+  eliminationTargetDate?: string;
   reviewCadenceMonths?: number;
 }
 

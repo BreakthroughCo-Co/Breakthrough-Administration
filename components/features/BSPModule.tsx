@@ -108,10 +108,10 @@ export const BSPModule: React.FC = () => {
       activeBsp?.participantProfile?.communicationMode ||
       'Multimodal: Spoken short phrases paired with AAC tablet and visual choice cards.',
     sensoryPreferences:
-      activeBsp?.participantProfile?.sensoryPreferences.join('\n') ||
+      activeBsp?.participantProfile?.sensoryPreferences?.join('\n') ||
       '• Proprioceptive deep pressure (weighted lap pad)\n• Noise-cancelling headphones in high decibel public areas\n• Low-lumen warm amber lighting',
     strengthsAndInterests:
-      activeBsp?.participantProfile?.strengthsAndInterests.join('\n') ||
+      activeBsp?.participantProfile?.strengthsAndInterests?.join('\n') ||
       '• Exceptional spatial puzzles and Lego assembly skills\n• Passion for digital drawing and train timetables\n• Responsive to structured, predictable routines',
     medicalHealthFactors:
       activeBsp?.participantProfile?.medicalHealthFactors ||
@@ -124,34 +124,34 @@ export const BSPModule: React.FC = () => {
       activeBsp?.functionalAssessment?.functionalHypothesis ||
       'When exposed to sudden auditory noise spikes or abrupt demand changes, Jordan exhibits physical agitation and task avoidance primarily to ESCAPE sensory overload and regain somatic self-regulation.',
     settingEvents:
-      activeBsp?.functionalAssessment?.settingEvents.join('\n') ||
+      activeBsp?.functionalAssessment?.settingEvents?.join('\n') ||
       '• Disrupted sleep (<6 hours)\n• Traffic delays on morning transit\n• High ambient room temperature (>24°C)',
     immediateTriggers:
-      activeBsp?.functionalAssessment?.immediateTriggers.join('\n') ||
+      activeBsp?.functionalAssessment?.immediateTriggers?.join('\n') ||
       '• Acoustic spikes above 75dB\n• Abrupt transitions without 5-minute visual timer notice\n• Hallway congestion with >4 people in 3m radius',
     maintainingConsequences:
-      activeBsp?.functionalAssessment?.maintainingConsequences.join('\n') ||
+      activeBsp?.functionalAssessment?.maintainingConsequences?.join('\n') ||
       '• Temporary escape from loud sensory demands\n• Reduction in auditory overload upon relocation to quiet room',
     targetBehaviorsText:
       activeBsp?.functionalAssessment?.targetBehaviors
-        .map(
+        ?.map(
           (b) =>
             `${b.behavior} | Severity: ${b.severity}/5 | Frequency: ${b.frequency}\n  Definition: ${b.operationalDefinition}`
         )
-        .join('\n\n') ||
+        ?.join('\n\n') ||
       'Acoustic Overload Escalation | Severity: 4/5 | Frequency: 2-3x/week\n  Definition: Places hands over both ears, paces rapidly, and produces high-pitched vocalisations.',
     // Proactive
     proactiveStrategiesText:
-      activeBsp?.proactiveStrategies.join('\n') ||
+      activeBsp?.proactiveStrategies?.join('\n') ||
       '• Visual schedule board with velcro token countdowns updated 10 mins prior to transitions\n• Scheduled 10-minute sensory breaks every 45 mins with weighted lap pad\n• Pre-briefing before crowded environments with "First-In / First-Seated" transport pass\n• Noise-cancelling headphones permanently kept within arm reach',
     // Skill Teaching
     replacementBehaviorsText:
       activeBsp?.skillTeaching?.replacementBehaviors
-        .map(
+        ?.map(
           (r) =>
             `Target: ${r.target}\nReplacement: ${r.replacement}\nMethod: ${r.teachingMethod}`
         )
-        .join('\n\n') ||
+        ?.join('\n\n') ||
       'Target: Physical agitation during noise spikes\nReplacement: Presenting "Quiet Space" AAC icon or putting on headphones\nMethod: Functional Communication Training (FCT) paired with errorless roleplay',
     fctProtocol:
       activeBsp?.skillTeaching?.functionalCommunicationTraining ||
@@ -161,13 +161,13 @@ export const BSPModule: React.FC = () => {
       'Continuous reinforcement (FR1) for independent break/headphone requests; intermittent social praise for calm transition completions.',
     // Active & Reactive
     earlyWarningSignsText:
-      activeBsp?.activeReactive?.earlyWarningSigns.join('\n') ||
+      activeBsp?.activeReactive?.earlyWarningSigns?.join('\n') ||
       '• Fidgeting with shirt hem and rapid knuckle tapping\n• Looking upwards towards ceiling lights repeatedly\n• Breathing rate increasing to >24 breaths/min\n• Vocal volume dropping to soft repetitive hum',
     activeDeescalationText:
-      activeBsp?.activeReactive?.activeDeescalationStrategies.join('\n') ||
+      activeBsp?.activeReactive?.activeDeescalationStrategies?.join('\n') ||
       '• Immediately validate sensory state with calm whisper ("I see it is loud, let us get headphones")\n• Offer weighted lap pad without demanding verbal acknowledgement\n• Dim ambient lights by 50% and turn off extraneous media\n• Provide single visual card choice: "Stay with headphones" OR "Walk to quiet room"',
     reactiveProtocolsText:
-      activeBsp?.activeReactive?.reactiveProtocols.join('\n') ||
+      activeBsp?.activeReactive?.reactiveProtocols?.join('\n') ||
       '• Phase 1 (Agitation): Ensure 2-metre physical buffer. Zero demands placed.\n• Phase 2 (Escalation): Guide peers to adjacent room calmly. Keep exit pathways clear.\n• Phase 3 (Recovery): Offer glass of cool water and sensory fidget. Do NOT debrief for minimum 20 minutes.',
     postIncidentDebriefText:
       activeBsp?.activeReactive?.postIncidentDebrief ||
@@ -188,9 +188,9 @@ export const BSPModule: React.FC = () => {
           doc.participantProfile?.communicationMode ||
           'Multimodal communication support.',
         sensoryPreferences:
-          doc.participantProfile?.sensoryPreferences.join('\n') || '',
+          doc.participantProfile?.sensoryPreferences?.join('\n') || '',
         strengthsAndInterests:
-          doc.participantProfile?.strengthsAndInterests.join('\n') || '',
+          doc.participantProfile?.strengthsAndInterests?.join('\n') || '',
         medicalHealthFactors:
           doc.participantProfile?.medicalHealthFactors || 'None reported.',
         decisionMakingPreferences:
@@ -199,35 +199,35 @@ export const BSPModule: React.FC = () => {
         functionalHypothesis:
           doc.functionalAssessment?.functionalHypothesis || '',
         settingEvents:
-          doc.functionalAssessment?.settingEvents.join('\n') || '',
+          doc.functionalAssessment?.settingEvents?.join('\n') || '',
         immediateTriggers:
-          doc.functionalAssessment?.immediateTriggers.join('\n') || '',
+          doc.functionalAssessment?.immediateTriggers?.join('\n') || '',
         maintainingConsequences:
-          doc.functionalAssessment?.maintainingConsequences.join('\n') || '',
+          doc.functionalAssessment?.maintainingConsequences?.join('\n') || '',
         targetBehaviorsText:
           doc.functionalAssessment?.targetBehaviors
-            .map(
+            ?.map(
               (b) =>
                 `${b.behavior} | Severity: ${b.severity}/5 | Frequency: ${b.frequency}\n  Definition: ${b.operationalDefinition}`
             )
-            .join('\n\n') || '',
-        proactiveStrategiesText: doc.proactiveStrategies.join('\n'),
+            ?.join('\n\n') || '',
+        proactiveStrategiesText: doc.proactiveStrategies?.join('\n') || '',
         replacementBehaviorsText:
           doc.skillTeaching?.replacementBehaviors
-            .map(
+            ?.map(
               (r) =>
                 `Target: ${r.target}\nReplacement: ${r.replacement}\nMethod: ${r.teachingMethod}`
             )
-            .join('\n\n') || '',
+            ?.join('\n\n') || '',
         fctProtocol:
           doc.skillTeaching?.functionalCommunicationTraining || '',
         reinforcementSchedule:
           doc.skillTeaching?.reinforcementSchedule || '',
         earlyWarningSignsText:
-          doc.activeReactive?.earlyWarningSigns.join('\n') || '',
+          doc.activeReactive?.earlyWarningSigns?.join('\n') || '',
         activeDeescalationText:
-          doc.activeReactive?.activeDeescalationStrategies.join('\n') || '',
-        reactiveProtocolsText: doc.activeReactive?.reactiveProtocols.join('\n') || '',
+          doc.activeReactive?.activeDeescalationStrategies?.join('\n') || '',
+        reactiveProtocolsText: doc.activeReactive?.reactiveProtocols?.join('\n') || '',
         postIncidentDebriefText:
           doc.activeReactive?.postIncidentDebrief || '',
       });
@@ -444,7 +444,7 @@ Provide a strictly valid JSON object with the following schema:
       clientId: selectedClient.id,
       clientName: selectedClient.name,
       version: formData.version || 'v2.2',
-      status: formData.status || 'Published',
+      status: (formData.status || 'Published') as any,
       summary: formData.summary,
       primaryBehaviorsOfConcern: parseLines(formData.targetBehaviorsText).map(
         (l) => l.split('|')[0].trim()
@@ -1331,7 +1331,7 @@ Provide a strictly valid JSON object with the following schema:
                   </div>
                   <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 space-y-1">
                     <strong className="text-emerald-400 block uppercase text-[10px]">Sensory Preferences:</strong>
-                    <p>{previewDoc.participantProfile?.sensoryPreferences.join(', ') || 'Noise-cancelling headphones, weighted blanket.'}</p>
+                    <p>{previewDoc.participantProfile?.sensoryPreferences?.join(', ') || 'Noise-cancelling headphones, weighted blanket.'}</p>
                   </div>
                 </div>
               </div>
@@ -1352,7 +1352,7 @@ Provide a strictly valid JSON object with the following schema:
                   3. Proactive Environmental Strategies
                 </h3>
                 <ul className="space-y-2 bg-slate-900/40 p-4 rounded-lg border border-slate-800">
-                  {previewDoc.proactiveStrategies.map((strat, i) => (
+                  {previewDoc.proactiveStrategies?.map((strat, i) => (
                     <li key={i} className="flex items-start gap-2 text-slate-300">
                       <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
                       <span>{strat}</span>
@@ -1370,7 +1370,7 @@ Provide a strictly valid JSON object with the following schema:
                   <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 space-y-1">
                     <strong className="text-amber-400 block uppercase text-[10px]">Early Warning Cues:</strong>
                     <ul className="list-disc list-inside space-y-0.5 text-slate-300">
-                      {previewDoc.activeReactive?.earlyWarningSigns.map((s, i) => (
+                      {previewDoc.activeReactive?.earlyWarningSigns?.map((s, i) => (
                         <li key={i}>{s}</li>
                       ))}
                     </ul>
@@ -1378,7 +1378,7 @@ Provide a strictly valid JSON object with the following schema:
                   <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 space-y-1">
                     <strong className="text-rose-400 block uppercase text-[10px]">De-escalation Steps:</strong>
                     <ul className="list-disc list-inside space-y-0.5 text-slate-300">
-                      {previewDoc.activeReactive?.activeDeescalationStrategies.map((s, i) => (
+                      {previewDoc.activeReactive?.activeDeescalationStrategies?.map((s, i) => (
                         <li key={i}>{s}</li>
                       ))}
                     </ul>
@@ -1452,7 +1452,7 @@ Provide a strictly valid JSON object with the following schema:
       <BSPAuditStudioModal
         isOpen={isAuditStudioOpen}
         onClose={() => setIsAuditStudioOpen(false)}
-        initialBsp={activeBsp}
+        initialBsp={activeBsp as any}
       />
     </div>
   );

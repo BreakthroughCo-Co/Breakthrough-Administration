@@ -19,7 +19,12 @@ import {
   ChevronRight,
   Cpu,
   Globe,
-  MapPin
+  MapPin,
+  Target,
+  GraduationCap,
+  TrendingUp,
+  Bot,
+  Zap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -50,24 +55,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       title: 'Operations & Control',
       items: [
         { id: 'command-center', label: 'Command Center', icon: LayoutDashboard },
+        { id: 'analytics', label: 'Executive Analytics', icon: BarChart3, highlight: true, badge: 'R4' },
+        { id: 'workflow-automation', label: 'Workflow Automation', icon: Bot, highlight: true, badge: 'AI' },
         { id: 'clients', label: 'NDIS Participants', icon: Users },
+        { id: 'referral-intake', label: 'Referral & Intake Flow', icon: UserPlus, badge: 'PACE' },
         { id: 'google-maps', label: 'Google Maps Routing', icon: MapPin, badge: 'MMM' },
         { id: 'case-notes', label: 'Clinical Case Notes', icon: FileText },
         { id: 'incidents', label: 'Incident Governance', icon: AlertTriangle, badge: 'PACE' },
       ],
     },
     {
-      title: 'Clinical Practice & BSP',
+      title: 'Clinical Practice & Outcomes',
       items: [
+        { id: 'outcome-tracking', label: 'Outcome & Plan Tracking', icon: Target, highlight: true, badge: 'GAS' },
         { id: 'restrictive-practices', label: 'Restrictive Practices', icon: Lock, highlight: true },
-        { id: 'abc-analyser', label: 'ABC Behaviour Analyser', icon: BarChart3 },
+        { id: 'abc-analyser', label: 'ABC Behaviour Analyser', icon: TrendingUp },
         { id: 'bsp-plans', label: 'BSP Plans & Generator', icon: FileSpreadsheet },
         { id: 'practice-tools', label: 'Practice Tools & Stories', icon: Sparkles, badge: 'AI' },
       ],
     },
     {
-      title: 'Business & Governance',
+      title: 'Workforce & Governance',
       items: [
+        { id: 'staff-training', label: 'Staff Training & CPD', icon: GraduationCap, highlight: true, badge: 'CPD' },
         { id: 'google-workspace', label: 'Google Workspace Hub', icon: Globe, highlight: true, badge: 'OAUTH' },
         { id: 'audit', label: 'Compliance Dashboard', icon: Award, highlight: true },
         { id: 'crm', label: 'Intake & CRM Leads', icon: UserPlus },

@@ -216,71 +216,115 @@ export const Header: React.FC = () => {
           {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-400" />}
         </button>
 
-        {/* Real-time Notification Bell */}
+        {/* Enhanced Real-time Notification Bell & Hub */}
         <div className="relative">
           <button
             onClick={() => setShowNotifPopover(!showNotifPopover)}
             className="p-2 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg text-slate-300 hover:text-white transition-all relative"
-            title="Real-time Compliance & Incident Notifications"
+            title="Real-time Compliance, Escalations & Incident Notifications"
           >
             <Bell className="w-4 h-4 text-teal-400" />
-            {unreadCount > 0 && (
+            {useManagementStore.getState().enhancedNotifications.filter((n) => !n.read || !n.acknowledged).length > 0 && (
               <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse shadow-sm">
-                {unreadCount}
+                {useManagementStore.getState().enhancedNotifications.filter((n) => !n.read || !n.acknowledged).length}
               </span>
             )}
           </button>
 
-          {/* Notifications Popover */}
+          {/* Enhanced Notifications Popover */}
           {showNotifPopover && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 z-50 text-xs space-y-3 animate-in fade-in duration-150">
+            <div className="absolute right-0 mt-2 w-80 sm:w-[420px] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 z-50 text-xs space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-teal-400" />
-                  <span className="font-bold text-white text-sm">Real-Time Alerts</span>
+                  <span className="font-bold text-white text-sm">Intelligent Alerts & Escalations</span>
                 </div>
-                {unreadCount > 0 && (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={markNotificationsRead}
+                    onClick={() => {
+                      useManagementStore.getState().generateDigest('daily');
+                      alert('Daily Executive Digest Generated & Saved!');
+                    }}
+                    className="text-[10px] text-teal-300 hover:text-white font-bold bg-teal-950/60 px-2 py-0.5 rounded border border-teal-500/30"
+                  >
+                    ⚡ Digest
+                  </button>
+                  <button
+                    onClick={() => {
+                      useManagementStore.getState().enhancedNotifications.forEach((n) => {
+                        if (!n.acknowledged) useManagementStore.getState().acknowledgeNotification(n.id);
+                      });
+                    }}
                     className="text-[10px] text-teal-400 hover:underline font-bold"
                   >
-                    Mark all read
+                    Ack all
                   </button>
-                )}
+                </div>
               </div>
 
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {notifications.length === 0 ? (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {useManagementStore.getState().enhancedNotifications.length === 0 ? (
                   <p className="text-center text-slate-500 py-4">No notifications.</p>
                 ) : (
-                  notifications.map((n: AppNotification) => (
-                    <div
-                      key={n.id}
-                      onClick={() => handleNotificationClick(n.linkTab)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer relative group ${
-                        n.read ? 'bg-slate-950/60 border-slate-800/80 text-slate-400' : 'bg-slate-800/90 border-teal-500/40 text-slate-200'
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          dismissNotification(n.id);
-                        }}
-                        className="absolute top-2 right-2 text-slate-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                  useManagementStore.getState().enhancedNotifications.map((n) => {
+                    const isCritical = n.severity === 'critical';
+                    const isWarning = n.severity === 'warning';
 
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-2 h-2 rounded-full ${n.severity === 'high' ? 'bg-rose-500' : 'bg-amber-400'}`} />
-                        <span className="font-bold text-white text-xs">{n.title}</span>
+                    return (
+                      <div
+                        key={n.id}
+                        onClick={() => {
+                          if (n.linkTab) setActiveTab(n.linkTab as TabType);
+                          setShowNotifPopover(false);
+                        }}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer relative group space-y-1.5 ${
+                          n.acknowledged
+                            ? 'bg-slate-950/60 border-slate-800/80 text-slate-400'
+                            : isCritical
+                            ? 'bg-rose-950/30 border-rose-500/40 text-slate-200 shadow-sm'
+                            : 'bg-slate-800/90 border-teal-500/40 text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-400' : 'bg-teal-400'
+                              }`}
+                            />
+                            <span className="font-bold text-white text-xs">{n.title}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold font-mono px-1.5 py-0.2 rounded bg-slate-950 text-slate-400 uppercase">
+                              {n.category}
+                            </span>
+                            {n.escalationLevel > 0 && (
+                              <span className="text-[9px] font-bold bg-rose-500/20 text-rose-300 px-1.5 py-0.2 rounded border border-rose-500/30">
+                                Lvl {n.escalationLevel} Esc
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-slate-300 leading-snug">{n.message}</p>
+
+                        <div className="flex items-center justify-between pt-1 text-[10px] text-slate-500 font-mono">
+                          <span>{new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {!n.acknowledged && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                useManagementStore.getState().acknowledgeNotification(n.id);
+                              }}
+                              className="px-2 py-0.5 bg-teal-600/80 hover:bg-teal-500 text-white rounded font-bold text-[9px] cursor-pointer"
+                            >
+                              Acknowledge
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-300 leading-snug">{n.message}</p>
-                      <span className="text-[9px] text-slate-500 font-mono mt-1 block">
-                        {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

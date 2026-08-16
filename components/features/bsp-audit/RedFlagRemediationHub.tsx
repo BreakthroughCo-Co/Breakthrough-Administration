@@ -87,7 +87,7 @@ export const RedFlagRemediationHub: React.FC<RedFlagRemediationHubProps> = ({
     const result = applyRemediationPatch(activeBsp, redFlag);
     if (result.patchApplied) {
       // 1. Update state store directly
-      updateBSPDocument(activeBsp.id, result.updatedBsp);
+      updateBSPDocument(activeBsp.id, result.updatedBsp as any);
 
       // 2. Audit Trail
       addAuditLog(
@@ -130,7 +130,7 @@ export const RedFlagRemediationHub: React.FC<RedFlagRemediationHubProps> = ({
 
     if (result.appliedCount > 0) {
       // 1. Update state store
-      updateBSPDocument(activeBsp.id, result.updatedBsp);
+      updateBSPDocument(activeBsp.id, result.updatedBsp as any);
 
       // 2. Audit Trail
       addAuditLog(

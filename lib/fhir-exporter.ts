@@ -126,7 +126,7 @@ export const exportParticipantToFHIRBundle = (
     meta: {
       profile: ['http://hl7.org.au/fhir/core/StructureDefinition/au-core-careplan'],
     },
-    status: bsp?.status === 'Approved' ? 'active' : 'draft',
+    status: (bsp?.status === 'Active' || bsp?.status === 'Published') ? 'active' : 'draft',
     intent: 'plan',
     category: [
       {
@@ -150,14 +150,14 @@ export const exportParticipantToFHIRBundle = (
       start: client.planStartDate,
       end: client.planEndDate,
     },
-    activity: (bsp?.proactiveStrategies || []).map((strat, idx) => ({
+    activity: (bsp?.proactiveStrategies || []).map((strat: any, idx) => ({
       detail: {
         kind: 'ServiceRequest',
         code: {
-          text: strat.title,
+          text: typeof strat === 'string' ? strat : (strat.title || `Strategy #${idx + 1}`),
         },
         status: 'in-progress',
-        description: strat.description,
+        description: typeof strat === 'string' ? strat : (strat.description || strat.title || ''),
       },
     })),
   };
@@ -193,7 +193,7 @@ export const exportParticipantToFHIRBundle = (
           text: ass.clinicalInterpretation,
         },
       ],
-      component: ass.domainScores.map((ds) => ({
+      component: (ass.domainScores || []).map((ds) => ({
         code: {
           text: ds.domainName,
         },

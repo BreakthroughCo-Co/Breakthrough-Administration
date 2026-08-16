@@ -383,7 +383,6 @@ export const GoogleMapsView: React.FC = () => {
                 <div className="space-y-2 pt-2">
                   <button
                     onClick={() => {
-                      setSelectedClient(selectedClient);
                       setActiveTab('clients');
                     }}
                     className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border border-slate-700"

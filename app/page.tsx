@@ -22,6 +22,11 @@ import { BillingModule } from '@/components/features/BillingModule';
 import { HRModule } from '@/components/features/HRModule';
 import { AuditLogsModule } from '@/components/features/AuditLogsModule';
 import { IntegrationsModule } from '@/components/features/IntegrationsModule';
+import { OutcomeTrackingModule } from '@/components/features/OutcomeTrackingModule';
+import { StaffTrainingModule } from '@/components/features/StaffTrainingModule';
+import { ReferralIntakeModule } from '@/components/features/ReferralIntakeModule';
+import { AnalyticsDashboardModule } from '@/components/features/AnalyticsDashboardModule';
+import { WorkflowAutomationModule } from '@/components/features/WorkflowAutomationModule';
 
 export default function Page() {
   const { activeTab, setActiveTab, theme, toggleAICopilot } = useManagementStore();
@@ -50,7 +55,12 @@ export default function Page() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             {activeTab === 'command-center' && <CommandCenter />}
+            {activeTab === 'analytics' && <AnalyticsDashboardModule />}
+            {activeTab === 'workflow-automation' && <WorkflowAutomationModule />}
             {activeTab === 'clients' && <ClientsModule />}
+            {activeTab === 'referral-intake' && <ReferralIntakeModule />}
+            {activeTab === 'outcome-tracking' && <OutcomeTrackingModule />}
+            {activeTab === 'staff-training' && <StaffTrainingModule />}
             {activeTab === 'case-notes' && <CaseNotesModule />}
             {activeTab === 'incidents' && <IncidentsModule />}
             {activeTab === 'restrictive-practices' && <RestrictivePracticesModule />}

@@ -53,6 +53,8 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({ client, is
   const [recipientRole, setRecipientRole] = useState<'Family Member' | 'Support Coordinator' | 'Plan Nominee'>('Family Member');
   const [feedbackNotes, setFeedbackNotes] = useState<string[]>([]);
   const [newFeedbackText, setNewFeedbackText] = useState('');
+  const [speakingGoalId, setSpeakingGoalId] = useState<string | null>(null);
+  const [signedGoalIds, setSignedGoalIds] = useState<string[]>([]);
 
   // Access permissions
   const [permGoals, setPermGoals] = useState(true);
@@ -67,6 +69,41 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({ client, is
   const [callDurationSeconds, setCallDurationSeconds] = useState(0);
   const [telehealthNotes, setTelehealthNotes] = useState('');
   const [telehealthSavedToast, setTelehealthSavedToast] = useState<string | null>(null);
+
+  const toggleSpeakGoal = (goalId: string, text: string) => {
+    if (typeof window === 'undefined') return;
+    if (speakingGoalId === goalId) {
+      window.speechSynthesis?.cancel();
+      setSpeakingGoalId(null);
+    } else {
+      window.speechSynthesis?.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setSpeakingGoalId(null);
+      utterance.onerror = () => setSpeakingGoalId(null);
+      window.speechSynthesis?.speak(utterance);
+      setSpeakingGoalId(goalId);
+    }
+  };
+
+  const handleSignGoal = (goalId: string, goalTitle: string) => {
+    if (signedGoalIds.includes(goalId)) return;
+    setSignedGoalIds((prev) => [...prev, goalId]);
+    if (client) {
+      addNotification({
+        title: 'Participant Goal Sign-Off Recorded',
+        message: `${client.name} (or nominee) signed off on Goal: "${goalTitle}".`,
+        type: 'client',
+        severity: 'info',
+        linkTab: 'clients',
+      });
+      addAuditLog(
+        'GOAL_CONSENT_SIGNOFF',
+        'CLIENT_GOALS',
+        goalId,
+        `Participant ${client.name} digitally confirmed consent and progress endorsement for goal "${goalTitle}".`
+      );
+    }
+  };
 
   useEffect(() => {
     let interval: any;
@@ -133,15 +170,19 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({ client, is
     addCaseNote({
       clientId: client.id,
       clientName: client.name,
-      practitionerId: currentUser.practitionerId || 'prac-1',
+      practitionerId: (currentUser as any).practitionerId || 'prac-1',
       practitionerName: currentUser.name,
       date: new Date().toISOString().slice(0, 10),
-      format: 'SOAP',
+      format: 'Standard',
       sessionDurationMinutes: Math.max(15, Math.ceil(callDurationSeconds / 60)),
-      content: `[TELEHEALTH CLINICAL CONSULTATION — ${formatTimer(callDurationSeconds)}]\n\n${telehealthNotes}`,
-      billableStatus: 'Pending',
-      isSynced: true,
-    });
+      subjective: `[TELEHEALTH CLINICAL CONSULTATION — ${formatTimer(callDurationSeconds)}]\n\n${telehealthNotes}`,
+      objective: 'Virtual telehealth consultation conducted.',
+      assessment: 'Participant engaged in session.',
+      plan: 'Continue scheduled intervention plan.',
+      linkedGoalIds: [],
+      status: 'Draft',
+      flaggedForReview: false,
+    } as any);
 
     setTelehealthSavedToast(`Telehealth consultation note logged for ${client.name} (${Math.max(15, Math.ceil(callDurationSeconds / 60))}m).`);
     setTimeout(() => setTelehealthSavedToast(null), 4000);
@@ -342,40 +383,75 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({ client, is
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {client.goals.map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <span className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold block">
-                          Goal Activity
-                        </span>
-                        <h4 className="text-base font-bold text-white leading-snug">{goal.title}</h4>
-                      </div>
-                      <span className="text-2xl">🌟</span>
-                    </div>
+                {client.goals.map((goal) => {
+                  const isSigned = signedGoalIds.includes(goal.id);
+                  const isSpeaking = speakingGoalId === goal.id;
 
-                    <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                        <span>How Close You Are:</span>
-                        <span className="text-teal-300 text-sm">{goal.progressPercent}% DONE</span>
+                  return (
+                    <div
+                      key={goal.id}
+                      className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4 shadow-sm relative overflow-hidden"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <span className="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold block">
+                            Goal Activity
+                          </span>
+                          <h4 className="text-base font-bold text-white leading-snug">{goal.title}</h4>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleSpeakGoal(goal.id, `${goal.title}. Your progress is ${goal.progressPercent} percent done.`)}
+                            className={`p-2 rounded-xl border transition-all ${
+                              isSpeaking
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                            }`}
+                            title="Read Goal Aloud"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
+                          <span className="text-2xl">🌟</span>
+                        </div>
                       </div>
-                      <div className="h-3.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-400 via-teal-400 to-emerald-400 rounded-full"
-                          style={{ width: `${goal.progressPercent}%` }}
-                        />
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Your support worker is helping you achieve this goal!</span>
+                      <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                          <span>How Close You Are:</span>
+                          <span className="text-teal-300 text-sm font-mono">{goal.progressPercent}% DONE</span>
+                        </div>
+                        <div className="h-3.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-400 via-teal-400 to-emerald-400 rounded-full"
+                            style={{ width: `${goal.progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Supported by your clinical team</span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSignGoal(goal.id, goal.title)}
+                          disabled={isSigned}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm ${
+                            isSigned
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+                              : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white cursor-pointer active:scale-95'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{isSigned ? 'Signed & Agreed ✔' : 'Agree & Sign Off'}</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

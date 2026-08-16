@@ -23,7 +23,8 @@ import {
   Flame,
   Shield,
   Layers,
-  ArrowRight
+  ArrowRight,
+  GitBranch
 } from 'lucide-react';
 import {
   AreaChart,
@@ -56,10 +57,11 @@ export const IncidentsModule: React.FC = () => {
     updateIncidentStatus,
     setActiveTab,
     importFbaToBsp,
-    addNotification
+    addNotification,
+    addAuditLog
   } = useManagementStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<'register' | 'predictive-risk'>('register');
+  const [activeSubTab, setActiveSubTab] = useState<'register' | 'predictive-risk' | 'rca-studio'>('register');
   const [isAdding, setIsAdding] = useState(false);
   const [selectedClient, setSelectedClient] = useState(clients[0]?.id || 'cli-101');
   const [aiAssessments, setAiAssessments] = useState<Record<string, string>>({});
@@ -70,6 +72,16 @@ export const IncidentsModule: React.FC = () => {
   const [isForecastingAi, setIsForecastingAi] = useState(false);
   const [predictiveInterventionText, setPredictiveInterventionText] = useState<string | null>(null);
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
+
+  // 5-Whys Root Cause Analysis (RCA) State
+  const [rcaIncidentId, setRcaIncidentId] = useState(incidents[0]?.id || 'inc-1');
+  const [why1, setWhy1] = useState('Abrupt environmental noise spike in dining hall during transition.');
+  const [why2, setWhy2] = useState('Sensory overload and fatigue following morning transport without break.');
+  const [why3, setWhy3] = useState('Noise-cancelling headphones were left in storage locker.');
+  const [why4, setWhy4] = useState('Morning shift handover did not flag scheduled sensory diet requirement.');
+  const [why5, setWhy5] = useState('No visual sensory equipment checklist at classroom entryway.');
+  const [rcaActionPlan, setRcaActionPlan] = useState('Implement entrance sensory checklist and mandatory 10-minute quiet buffer prior to dining hall entry.');
+  const [rcaSuccessMsg, setRcaSuccessMsg] = useState<string | null>(null);
 
   const [severity, setSeverity] = useState<Incident['severity']>('High');
   const [description, setDescription] = useState('');
@@ -152,7 +164,7 @@ Provide:
       ndis5daySubmitted: false,
       practitionerId: 'p1',
       practitionerName: 'System User',
-    });
+    } as any);
 
     setIsAdding(false);
     setDescription('');
@@ -314,6 +326,18 @@ Provide:
           >
             <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
             <span>Predictive Escalation Forecast</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('rca-studio')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeSubTab === 'rca-studio'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <GitBranch className="w-3.5 h-3.5 text-amber-300" />
+            <span>5-Whys Root Cause Analysis (RCA)</span>
           </button>
         </div>
       </div>
@@ -656,6 +680,236 @@ Provide:
           </div>
         </div>
       )}
+
+      {/* SUB-TAB 3: 5-WHYS ROOT CAUSE ANALYSIS (RCA) STUDIO */}
+      {activeSubTab === 'rca-studio' && (() => {
+        const selectedInc = incidents.find((i) => i.id === rcaIncidentId) || incidents[0];
+        const participant = clients.find((c) => c.id === selectedInc?.clientId) || clients[0];
+
+        const handleSyncRcaToBsp = () => {
+          if (!participant) return;
+          importFbaToBsp(participant.id, {
+            immediateTriggers: [
+              `[RCA Trigger]: ${why1}`,
+              `[Environmental Trigger]: ${why3}`,
+            ],
+            settingEvents: [
+              `[RCA Setting Event]: ${why2}`,
+              `[Systemic Factor]: ${why4}`,
+            ],
+            functionalHypothesis: `Incident RCA Root Cause: ${why5} | Corrective Plan: ${rcaActionPlan}`,
+          });
+
+          addNotification({
+            title: 'Incident RCA Corrective Plan Pushed to BSP',
+            message: `Integrated 5-Whys corrective measures into ${participant.name}'s Behaviour Support Plan.`,
+            type: 'compliance',
+            severity: 'info',
+            linkTab: 'bsp-plans',
+          });
+
+          addAuditLog(
+            'INCIDENT_RCA_COMPLETED',
+            'INCIDENTS',
+            selectedInc?.id || 'inc-1',
+            `Completed 5-Whys Root Cause Analysis for ${participant.name} incident. Action plan synchronized to active BSP.`
+          );
+
+          setRcaSuccessMsg(`Successfully synchronized 5-Whys corrective strategies into ${participant.name}'s Behaviour Support Plan!`);
+          setTimeout(() => setRcaSuccessMsg(null), 4500);
+        };
+
+        return (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header & Incident Selector */}
+            <div className="p-5 bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-950 rounded-2xl border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <GitBranch className="w-5 h-5 text-amber-400" />
+                    Clinical 5-Whys Incident Root Cause Analysis Studio
+                  </h3>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-500/30 font-bold uppercase">
+                    NDIS Safeguard Standard 4
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Systematic deep-dive investigation tool to uncover setting events, sensory triggers, and systemic breakdowns to prevent recurrence.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="text-xs text-slate-300 font-bold shrink-0">Select Incident:</label>
+                <select
+                  value={rcaIncidentId}
+                  onChange={(e) => setRcaIncidentId(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-500"
+                >
+                  {incidents.map((inc) => (
+                    <option key={inc.id} value={inc.id}>
+                      {new Date(inc.incidentDate).toLocaleDateString()} - {inc.clientName} ({inc.severity})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Selected Incident Context Banner */}
+            {selectedInc && (
+              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
+                <div>
+                  <span className="text-slate-500 uppercase tracking-widest text-[10px] block">Participant</span>
+                  <span className="text-white font-bold text-sm">{selectedInc.clientName}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 uppercase tracking-widest text-[10px] block">Severity & Reportable Status</span>
+                  <span className={`font-bold ${selectedInc.severity === 'Critical / Reportable' ? 'text-rose-400' : 'text-amber-400'}`}>
+                    {selectedInc.severity} {selectedInc.isNdisReportable ? '(NDIS Commission 24h)' : ''}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 uppercase tracking-widest text-[10px] block">Original Description</span>
+                  <span className="text-slate-300 line-clamp-2">{selectedInc.description}</span>
+                </div>
+              </div>
+            )}
+
+            {/* 5-Whys Interactive Investigation Cascade */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+                5-Whys Investigative Sequence
+              </h4>
+
+              <div className="space-y-3">
+                {/* Why 1 */}
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px]">1</span>
+                      Why 1: What was the immediate precipitating event?
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Immediate Trigger</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={why1}
+                    onChange={(e) => setWhy1(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Why 2 */}
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px]">2</span>
+                      Why 2: Why was the participant vulnerable to this trigger at that moment?
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Setting Event</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={why2}
+                    onChange={(e) => setWhy2(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Why 3 */}
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px]">3</span>
+                      Why 3: Why were environmental buffers or sensory tools absent?
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Environmental Safeguard</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={why3}
+                    onChange={(e) => setWhy3(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Why 4 */}
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px]">4</span>
+                      Why 4: Why was there a communication breakdown between shifts/carers?
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Process & Handover</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={why4}
+                    onChange={(e) => setWhy4(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Why 5 */}
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[10px]">5</span>
+                      Why 5: What is the fundamental organizational or systemic root cause?
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Systemic Root Cause</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={why5}
+                    onChange={(e) => setWhy5(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Corrective Action Plan & BSP Sync */}
+            <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    Corrective & Preventive Action Plan (CAPA)
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Measurable organizational and clinical adjustments to eliminate recurrence.
+                  </p>
+                </div>
+              </div>
+
+              <textarea
+                rows={3}
+                value={rcaActionPlan}
+                onChange={(e) => setRcaActionPlan(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-500"
+              />
+
+              {rcaSuccessMsg && (
+                <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{rcaSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleSyncRcaToBsp}
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95"
+                >
+                  <Flame className="w-4 h-4 text-amber-300" />
+                  <span>1-Click Push Corrective Actions to Active BSP Proactive Strategies</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal for adding incident */}
       {isAdding && (

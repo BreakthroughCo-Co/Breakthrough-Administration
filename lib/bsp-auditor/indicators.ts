@@ -410,7 +410,7 @@ export function auditRestrictivePractices(bsp: BSPDocument): {
     }
 
     // Check least restrictive justification
-    const leastRestrictiveJustified = (desc.length >= 30 || rationale.length >= 20 || (rp.leastRestrictiveAlternativesTried && rp.leastRestrictiveAlternativesTried.length > 0));
+    const leastRestrictiveJustified = Boolean(desc.length >= 30 || rationale.length >= 20 || (rp.leastRestrictiveAlternativesTried && rp.leastRestrictiveAlternativesTried.length > 0));
 
     // Check specific prohibited restraint in this practice
     let rpProhibited: 'prone' | 'supine' | 'neck_hold' | 'diaphragm_hold' | 'unauthorized_mechanical' | null = null;

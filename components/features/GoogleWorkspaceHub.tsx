@@ -109,7 +109,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
   const [createdSlideUrl, setCreatedSlideUrl] = useState<string | null>(null);
 
   // Calendar & Meet state
-  const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<WorkspaceCalendarEvent[]>([]);
   const [generatedMeetLink, setGeneratedMeetLink] = useState<string | null>(null);
   const [newMeetingTitle, setNewMeetingTitle] = useState('');
 
@@ -629,7 +629,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
                           <div>
                             <p className="text-xs font-bold text-white">{file.name}</p>
                             <p className="text-[10px] text-slate-500 font-mono">
-                              Author: {file.author} • Modified: {new Date(file.lastModified).toLocaleDateString()}
+                              Author: {file.author} • Modified: {new Date(file.lastModified || file.modifiedTime || Date.now()).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -797,7 +797,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
                     onClick={() => {
                       const client = clients.find((c) => c.id === selectedDocClientId) || clients[0];
                       const bsp = bspDocuments.find((b) => b.clientId === selectedDocClientId) || bspDocuments[0];
-                      const content = `# Positive Behaviour Support Plan - ${client.name}\n\n**Participant**: ${client.name} | **NDIS Number**: ${client.ndisNumber}\n**Plan Version**: ${bsp?.version || 'v2.2'} | **Review Date**: ${bsp?.reviewDate || '2027-02-15'}\n**Author**: Dr. Sarah Jenkins (Senior PBS Practitioner)\n\n---\n\n## Section 1: Participant Profile & Communication\n- Communication Mode: Multimodal AAC & Visual Choice Cards\n- Decision Making: Pictorial choice boards with 30s latency\n\n## Section 2: Functional Behaviour Assessment (FBA)\n${bsp?.functionalAssessment?.functionalHypothesis || 'Escape from auditory noise overload during transitional periods.'}\n\n## Section 3: Proactive Environmental Strategies\n${bsp?.proactiveStrategies.map((s) => `- ${s}`).join('\n') || '- Visual schedule board\n- Dimmable lighting'}\n\n## Section 4: Skill Teaching & Replacement Behaviours\n${bsp?.skillTeaching?.replacementBehaviors.map((r) => `- Target: ${r.target} -> Replacement: ${r.replacement}`).join('\n') || '- Functional communication training'}\n\n## Section 5: Active & Reactive Crisis Protocols\n${bsp?.activeReactive?.reactiveProtocols.map((p) => `- ${p}`).join('\n') || '- Low arousal physical buffer'}\n\n## Section 6: Regulated Restrictive Practices\n${bsp?.restrictivePractices.map((rp) => `- ${rp.practiceType} (Authorization Ref: ${rp.authorizationReference})`).join('\n') || '- None registered'}\n\nGenerated via Breakthrough Administration NDIS Clinical OS.`;
+                      const content = `# Positive Behaviour Support Plan - ${client.name}\n\n**Participant**: ${client.name} | **NDIS Number**: ${client.ndisNumber}\n**Plan Version**: ${bsp?.version || 'v2.2'} | **Review Date**: ${bsp?.reviewDate || '2027-02-15'}\n**Author**: Dr. Sarah Jenkins (Senior PBS Practitioner)\n\n---\n\n## Section 1: Participant Profile & Communication\n- Communication Mode: Multimodal AAC & Visual Choice Cards\n- Decision Making: Pictorial choice boards with 30s latency\n\n## Section 2: Functional Behaviour Assessment (FBA)\n${bsp?.functionalAssessment?.functionalHypothesis || 'Escape from auditory noise overload during transitional periods.'}\n\n## Section 3: Proactive Environmental Strategies\n${bsp?.proactiveStrategies?.map((s: string) => `- ${s}`).join('\n') || '- Visual schedule board\n- Dimmable lighting'}\n\n## Section 4: Skill Teaching & Replacement Behaviours\n${bsp?.skillTeaching?.replacementBehaviors?.map((r: any) => `- Target: ${r.target} -> Replacement: ${r.replacement}`).join('\n') || '- Functional communication training'}\n\n## Section 5: Active & Reactive Crisis Protocols\n${bsp?.activeReactive?.reactiveProtocols?.map((p: string) => `- ${p}`).join('\n') || '- Low arousal physical buffer'}\n\n## Section 6: Regulated Restrictive Practices\n${bsp?.restrictivePractices?.map((rp: any) => `- ${rp.practiceType} (Authorization Ref: ${rp.authorizationReference})`).join('\n') || '- None registered'}\n\nGenerated via Breakthrough Administration NDIS Clinical OS.`;
                       
                       const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
                       const url = URL.createObjectURL(blob);
@@ -880,18 +880,22 @@ export const GoogleWorkspaceHub: React.FC = () => {
                       'PRODID:-//Breakthrough Administration//NDIS Clinical Schedule 2026//EN',
                       'CALSCALE:GREGORIAN',
                       'METHOD:PUBLISH',
-                      ...googleCalendarEvents.flatMap((ev) => [
-                        'BEGIN:VEVENT',
-                        `UID:${ev.id}@breakthrough.org.au`,
-                        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
-                        `DTSTART:${ev.start.replace(/[-:]/g, '').slice(0, 15)}Z`,
-                        `DTEND:${ev.end.replace(/[-:]/g, '').slice(0, 15)}Z`,
-                        `SUMMARY:${ev.title}`,
-                        `DESCRIPTION:${ev.description || ''} (Participant: ${ev.participantName || 'N/A'})`,
-                        `LOCATION:${ev.location}`,
-                        `STATUS:${ev.status}`,
-                        'END:VEVENT',
-                      ]),
+                      ...googleCalendarEvents.flatMap((ev) => {
+                        const startStr = typeof ev.start === 'string' ? ev.start : (ev.start?.dateTime || ev.start?.date || new Date().toISOString());
+                        const endStr = typeof ev.end === 'string' ? ev.end : (ev.end?.dateTime || ev.end?.date || new Date().toISOString());
+                        return [
+                          'BEGIN:VEVENT',
+                          `UID:${ev.id}@breakthrough.org.au`,
+                          `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+                          `DTSTART:${startStr.replace(/[-:]/g, '').slice(0, 15)}Z`,
+                          `DTEND:${endStr.replace(/[-:]/g, '').slice(0, 15)}Z`,
+                          `SUMMARY:${ev.title || ev.summary || 'Clinical Session'}`,
+                          `DESCRIPTION:${ev.description || ''} (Participant: ${ev.participantName || 'N/A'})`,
+                          `LOCATION:${ev.location || 'Clinic'}`,
+                          `STATUS:${ev.status || 'CONFIRMED'}`,
+                          'END:VEVENT',
+                        ];
+                      }),
                       'END:VCALENDAR',
                     ].join('\r\n');
 
@@ -947,14 +951,12 @@ export const GoogleWorkspaceHub: React.FC = () => {
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-2 border-t border-slate-900">
-                      <span>{new Date(evt.start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      <span>{new Date(typeof evt.start === 'string' ? evt.start : (evt.start?.dateTime || evt.start?.date || Date.now())).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                       <span className="text-teal-400">{evt.location}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-              )}
             </div>
           </div>
         )}

@@ -28,7 +28,7 @@ export const AuditLogsModule: React.FC = () => {
   const severities = ['ALL', 'Critical', 'High', 'Medium', 'Low'];
 
   const getAuditSeverity = (log: AuditLog): 'Low' | 'Medium' | 'High' | 'Critical' => {
-    if (log.severity) return log.severity;
+    if ((log as any).severity) return (log as any).severity;
     const combined = `${log.action} ${log.details} ${log.entity}`.toUpperCase();
     if (
       combined.includes('DELETE') ||

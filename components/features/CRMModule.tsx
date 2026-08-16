@@ -36,7 +36,7 @@ export const CRMModule: React.FC = () => {
       source: 'Support Coordinator Referral',
       estimatedPlanValue: Number(planValue),
       notes: 'New referral submitted via NDIS intake portal.',
-    });
+    } as any);
 
     setIsAdding(false);
     setProspectName('');

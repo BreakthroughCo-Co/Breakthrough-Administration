@@ -26,7 +26,32 @@ import {
   NDISCommissionAuditPackage,
   ClinicBranch,
   ExtractedClinicalReport,
-  OfflineSyncQueueItem
+  OfflineSyncQueueItem,
+  // R1-R6 New Types
+  NDISPlanBudgetLine,
+  GASGoal,
+  GASLevel,
+  OutcomeMeasurement,
+  PlanReviewSummary,
+  CPDRecord,
+  StaffCredential,
+  OnboardingChecklist,
+  CompetencyMatrixEntry,
+  TrainingModule,
+  TrainingCompletion,
+  Referral,
+  ReferralStage,
+  WaitlistEntry,
+  ServiceAgreement,
+  IntakeAssessment,
+  EnhancedNotification,
+  NotificationPreference,
+  DigestSummary,
+  WorkflowTemplate,
+  AutomationRule,
+  TaskAssignment,
+  BatchAction,
+  WorkloadPrediction,
 } from '@/types';
 import {
   INITIAL_USERS,
@@ -51,7 +76,29 @@ import {
   INITIAL_CLINICAL_ASSESSMENTS,
   DEFAULT_PRACTICE_BRANDING,
   INITIAL_CLINICS,
-  INITIAL_EXTRACTED_REPORTS
+  INITIAL_EXTRACTED_REPORTS,
+  // R1-R6 New Mock Data
+  INITIAL_PLAN_BUDGET_LINES,
+  INITIAL_GAS_GOALS,
+  INITIAL_OUTCOME_MEASUREMENTS,
+  INITIAL_CPD_RECORDS,
+  INITIAL_CREDENTIALS,
+  INITIAL_ONBOARDING_CHECKLISTS,
+  INITIAL_COMPETENCY_MATRIX,
+  INITIAL_TRAINING_MODULES,
+  INITIAL_TRAINING_COMPLETIONS,
+  INITIAL_REFERRALS,
+  INITIAL_WAITLIST,
+  INITIAL_SERVICE_AGREEMENTS,
+  INITIAL_INTAKE_ASSESSMENTS,
+  INITIAL_ENHANCED_NOTIFICATIONS,
+  INITIAL_NOTIFICATION_PREFERENCES,
+  INITIAL_DIGEST_SUMMARIES,
+  INITIAL_WORKFLOW_TEMPLATES,
+  INITIAL_AUTOMATION_RULES,
+  INITIAL_TASK_ASSIGNMENTS,
+  INITIAL_BATCH_ACTIONS,
+  INITIAL_WORKLOAD_PREDICTIONS,
 } from '@/lib/mock-data';
 
 import { create } from 'zustand';
@@ -74,7 +121,12 @@ export type TabType =
   | 'practice-tools'
   | 'integrations'
   | 'google-workspace'
-  | 'google-maps';
+  | 'google-maps'
+  | 'outcome-tracking'
+  | 'staff-training'
+  | 'referral-intake'
+  | 'analytics'
+  | 'workflow-automation';
 
 const INITIAL_NOTIFICATIONS: AppNotification[] = [
   {
@@ -158,6 +210,38 @@ interface ManagementState {
   isTourOpen: boolean;
   hasCompletedTour: boolean;
 
+  // R1: Outcome Tracking State
+  planBudgetLines: NDISPlanBudgetLine[];
+  gasGoals: GASGoal[];
+  outcomeMeasurements: OutcomeMeasurement[];
+  planReviewSummaries: PlanReviewSummary[];
+
+  // R2: Staff Training State
+  cpdRecords: CPDRecord[];
+  staffCredentials: StaffCredential[];
+  onboardingChecklists: OnboardingChecklist[];
+  competencyMatrix: CompetencyMatrixEntry[];
+  trainingModules: TrainingModule[];
+  trainingCompletions: TrainingCompletion[];
+
+  // R3: Referral & Intake State
+  referrals: Referral[];
+  waitlist: WaitlistEntry[];
+  serviceAgreements: ServiceAgreement[];
+  intakeAssessments: IntakeAssessment[];
+
+  // R5: Enhanced Notifications State
+  enhancedNotifications: EnhancedNotification[];
+  notificationPreferences: NotificationPreference[];
+  digestSummaries: DigestSummary[];
+
+  // R6: Workflow Automation State
+  workflowTemplates: WorkflowTemplate[];
+  automationRules: AutomationRule[];
+  taskAssignments: TaskAssignment[];
+  batchActions: BatchAction[];
+  workloadPredictions: WorkloadPrediction[];
+
   openTour: () => void;
   closeTour: () => void;
   completeTour: () => void;
@@ -178,7 +262,7 @@ interface ManagementState {
   addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
   loadFromFirestore: () => Promise<void>;
 
-  // Actions
+  // Existing Actions
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateClient: (id: string, updates: Partial<Client>) => void;
   addClientGoal: (clientId: string, goal: Omit<ClientGoal, 'id'>) => void;
@@ -216,6 +300,46 @@ interface ManagementState {
   clearSyncedOfflineQueue: () => void;
   addAuditLog: (action: string, entity: string, entityId: string, details: string) => void;
   addCommunication: (comm: Omit<CommunicationLog, 'id' | 'timestamp'>) => void;
+
+  // R1: Outcome Tracking Actions
+  addGASGoal: (goal: Omit<GASGoal, 'id' | 'tScore'>) => void;
+  updateGASGoal: (id: string, updates: Partial<GASGoal>) => void;
+  addGASMeasurement: (goalId: string, level: GASLevel, note: string) => void;
+  computeGASTScore: (goals: GASGoal[]) => number;
+  addOutcomeMeasurement: (measurement: Omit<OutcomeMeasurement, 'id'>) => void;
+  updatePlanBudgetLine: (id: string, updates: Partial<NDISPlanBudgetLine>) => void;
+  generatePlanReviewSummary: (clientId: string) => PlanReviewSummary;
+
+  // R2: Staff Training Actions
+  addCPDRecord: (record: Omit<CPDRecord, 'id'>) => void;
+  addStaffCredential: (credential: Omit<StaffCredential, 'id'>) => void;
+  updateStaffCredential: (id: string, updates: Partial<StaffCredential>) => void;
+  updateOnboardingItem: (checklistId: string, itemId: string, completed: boolean) => void;
+  addTrainingCompletion: (completion: Omit<TrainingCompletion, 'id'>) => void;
+
+  // R3: Referral & Intake Actions
+  addReferral: (referral: Omit<Referral, 'id' | 'priorityScore' | 'createdAt' | 'updatedAt'>) => void;
+  updateReferralStage: (id: string, stage: ReferralStage, handoffNotes?: string) => void;
+  calculatePriorityScore: (urgency: number, complexity: number, availability: number) => number;
+  updateWaitlistPosition: (id: string, position: number) => void;
+  removeFromWaitlist: (id: string) => void;
+  generateServiceAgreement: (referralId: string) => void;
+  advanceIntakeStage: (assessmentId: string, findings?: string, handoffNotes?: string) => void;
+  convertReferralToClient: (referralId: string) => void;
+
+  // R5: Enhanced Notification Actions
+  addEnhancedNotification: (notification: Omit<EnhancedNotification, 'id' | 'timestamp' | 'read' | 'acknowledged' | 'escalationLevel'>) => void;
+  acknowledgeNotification: (id: string) => void;
+  escalateNotification: (id: string) => void;
+  updateNotificationPreference: (id: string, updates: Partial<NotificationPreference>) => void;
+  generateDigest: (period: 'daily' | 'weekly') => DigestSummary;
+
+  // R6: Workflow Automation Actions
+  addTaskAssignment: (task: Omit<TaskAssignment, 'id' | 'createdAt' | 'status'>) => void;
+  updateTaskStatus: (id: string, status: TaskAssignment['status']) => void;
+  executeBatchAction: (action: Omit<BatchAction, 'id' | 'executedAt' | 'result' | 'affectedCount'>) => void;
+  toggleAutomationRule: (id: string) => void;
+  smartAssignTask: (taskTitle: string, taskType: string, sourceModule: string, sourceEntityId: string) => TaskAssignment;
 }
 
 export const useManagementStore = create<ManagementState>((set, get) => ({
@@ -256,6 +380,38 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   isLoading: false,
   isTourOpen: false,
   hasCompletedTour: false,
+
+  // R1: Outcome Tracking
+  planBudgetLines: INITIAL_PLAN_BUDGET_LINES,
+  gasGoals: INITIAL_GAS_GOALS,
+  outcomeMeasurements: INITIAL_OUTCOME_MEASUREMENTS,
+  planReviewSummaries: [],
+
+  // R2: Staff Training
+  cpdRecords: INITIAL_CPD_RECORDS,
+  staffCredentials: INITIAL_CREDENTIALS,
+  onboardingChecklists: INITIAL_ONBOARDING_CHECKLISTS,
+  competencyMatrix: INITIAL_COMPETENCY_MATRIX,
+  trainingModules: INITIAL_TRAINING_MODULES,
+  trainingCompletions: INITIAL_TRAINING_COMPLETIONS,
+
+  // R3: Referral & Intake
+  referrals: INITIAL_REFERRALS,
+  waitlist: INITIAL_WAITLIST,
+  serviceAgreements: INITIAL_SERVICE_AGREEMENTS,
+  intakeAssessments: INITIAL_INTAKE_ASSESSMENTS,
+
+  // R5: Enhanced Notifications
+  enhancedNotifications: INITIAL_ENHANCED_NOTIFICATIONS,
+  notificationPreferences: INITIAL_NOTIFICATION_PREFERENCES,
+  digestSummaries: INITIAL_DIGEST_SUMMARIES,
+
+  // R6: Workflow Automation
+  workflowTemplates: INITIAL_WORKFLOW_TEMPLATES,
+  automationRules: INITIAL_AUTOMATION_RULES,
+  taskAssignments: INITIAL_TASK_ASSIGNMENTS,
+  batchActions: INITIAL_BATCH_ACTIONS,
+  workloadPredictions: INITIAL_WORKLOAD_PREDICTIONS,
 
   openTour: () => set({ isTourOpen: true }),
   closeTour: () => set({ isTourOpen: false }),
@@ -732,9 +888,9 @@ ${
         .filter((a) => a.clientId === client.id)
         .map(
           (a) =>
-            `- **${a.assessmentTool}** (${a.assessmentDate}):\n  - Domains: ${a.domainScores
-              .map((d) => `${d.domainName}: ${d.rawScore} pts (${d.adaptiveLevel})`)
-              .join(', ')}\n  - Interpretation: ${a.clinicalInterpretation.slice(0, 180)}...`
+            `- **${a.assessmentTool || a.toolName || 'Assessment'}** (${a.assessmentDate || a.date || ''}):\n  - Domains: ${(a.domainScores || [])
+              .map((d) => `${d.domainName}: ${d.rawScore} pts (${d.adaptiveLevel || 'Adequate'})`)
+              .join(', ')}\n  - Interpretation: ${(a.clinicalInterpretation || a.notes || '').slice(0, 180)}...`
         )
         .join('\n')
     : `- **Vineland-3 & Sensory Profile 2**: Adaptive behavior and sensory profiles logged and verified in clinical vault.`
@@ -779,16 +935,9 @@ ${
 
     const clientBsp = state.bspDocuments.find((b) => b.clientId === clientId);
     if (clientBsp) {
-      const updatedStrategies = [
+      const updatedStrategies: string[] = [
         ...(clientBsp.proactiveStrategies || []),
-        ...report.recommendedStrategies.map((s, idx) => ({
-          id: `strat-auto-${Date.now()}-${idx}`,
-          title: `Report Strategy: ${s.slice(0, 40)}...`,
-          category: 'Environmental Modification',
-          description: s,
-          implementationContext: 'Direct extraction from specialist medical assessment report.',
-          responsibleRoles: ['Support Worker', 'Behaviour Support Practitioner'],
-        })),
+        ...(report.recommendedStrategies || []),
       ];
 
       state.updateBSPDocument(clientBsp.id, {
@@ -805,7 +954,7 @@ ${
 
     get().addNotification({
       title: 'Report Transferred to BSP',
-      message: `Transferred ${report.recommendedStrategies.length} strategies from ${report.fileName} into active Behaviour Support Plan.`,
+      message: `Transferred ${(report.recommendedStrategies || []).length} strategies from ${report.fileName || report.documentName || 'report'} into active Behaviour Support Plan.`,
       type: 'compliance',
       severity: 'info',
       linkTab: 'bsp-creator',
@@ -904,5 +1053,423 @@ ${
     set((state) => ({ communications: [newComm, ...state.communications] }));
     get().addAuditLog('Logged Communication', 'CommunicationLog', id, `Recorded ${newComm.type} with ${newComm.entityName}`);
   },
-}));
 
+  // ======================================================================
+  // R1: Outcome Tracking Actions
+  // ======================================================================
+
+  addGASGoal: (goalData) => {
+    const id = `gas-${Date.now()}`;
+    const tScore = get().computeGASTScore([{ ...goalData, id, tScore: 0 } as GASGoal]);
+    const newGoal: GASGoal = { ...goalData, id, tScore };
+    set((state) => ({ gasGoals: [newGoal, ...state.gasGoals] }));
+    get().addAuditLog('Added GAS Goal', 'GASGoal', id, `Added goal "${newGoal.goalTitle}" for ${newGoal.clientName}`);
+  },
+
+  updateGASGoal: (id, updates) => {
+    set((state) => ({
+      gasGoals: state.gasGoals.map((g) => (g.id === id ? { ...g, ...updates } : g)),
+    }));
+  },
+
+  addGASMeasurement: (goalId, level, note) => {
+    const measurement = {
+      id: `gm-${Date.now()}`,
+      date: new Date().toISOString().slice(0, 10),
+      level,
+      note,
+      measuredBy: get().currentUser.name,
+    };
+    set((state) => ({
+      gasGoals: state.gasGoals.map((g) => {
+        if (g.id !== goalId) return g;
+        const updated = { ...g, currentLevel: level, measurements: [...g.measurements, measurement] };
+        updated.tScore = get().computeGASTScore([updated]);
+        return updated;
+      }),
+    }));
+    get().addAuditLog('Added GAS Measurement', 'GASGoal', goalId, `Recorded level ${level} measurement`);
+  },
+
+  computeGASTScore: (goals) => {
+    if (goals.length === 0) return 50;
+    const n = goals.length;
+    const sumWX = goals.reduce((sum, g) => sum + g.weight * g.currentLevel, 0);
+    const sumW = goals.reduce((sum, g) => sum + g.weight, 0);
+    const sumW2 = goals.reduce((sum, g) => sum + g.weight * g.weight, 0);
+    const rho = 0.3;
+    const denominator = Math.sqrt((1 / (n * n)) * ((1 - rho) * sumW2 + rho * sumW * sumW));
+    if (denominator === 0) return 50;
+    return Math.round((50 + (10 * sumWX) / (n * denominator)) * 10) / 10;
+  },
+
+  addOutcomeMeasurement: (measurementData) => {
+    const id = `om-${Date.now()}`;
+    const newMeasurement: OutcomeMeasurement = { ...measurementData, id };
+    set((state) => ({ outcomeMeasurements: [newMeasurement, ...state.outcomeMeasurements] }));
+    get().addAuditLog('Added Outcome Measurement', 'OutcomeMeasurement', id, `${newMeasurement.instrument} for ${newMeasurement.clientName}`);
+  },
+
+  updatePlanBudgetLine: (id, updates) => {
+    set((state) => ({
+      planBudgetLines: state.planBudgetLines.map((l) => {
+        if (l.id !== id) return l;
+        const updated = { ...l, ...updates };
+        updated.utilizationPercent = Math.round((updated.spent / updated.allocated) * 1000) / 10;
+        return updated;
+      }),
+    }));
+  },
+
+  generatePlanReviewSummary: (clientId) => {
+    const state = get();
+    const client = state.clients.find((c) => c.id === clientId);
+    if (!client) throw new Error('Client not found');
+
+    const clientNotes = state.caseNotes.filter((n) => n.clientId === clientId);
+    const clientBsp = state.bspDocuments.find((b) => b.clientId === clientId);
+    const clientIncidents = state.incidents.filter((i) => i.clientId === clientId);
+    const clientClaims = state.billingClaims.filter((c) => c.clientId === clientId);
+    const clientBudget = state.planBudgetLines.filter((l) => l.clientId === clientId);
+    const clientGAS = state.gasGoals.filter((g) => g.clientId === clientId);
+
+    const summary: PlanReviewSummary = {
+      id: `prs-${Date.now()}`,
+      clientId,
+      clientName: client.name,
+      reviewDate: new Date().toISOString().slice(0, 10),
+      planPeriod: `${client.planStartDate} to ${client.planEndDate}`,
+      budgetUtilization: clientBudget.map((l) => ({ category: l.supportCategory, allocated: l.allocated, spent: l.spent, percent: l.utilizationPercent })),
+      goalProgress: clientGAS.map((g) => ({ goalTitle: g.goalTitle, baseline: g.baselineLevel, current: g.currentLevel, tScore: g.tScore })),
+      caseNoteSummary: { totalNotes: clientNotes.length, lastNoteDate: clientNotes[0]?.date || 'N/A', keyThemes: ['Behaviour support implementation', 'Skill acquisition', 'Community participation'] },
+      bspComplianceStatus: clientBsp?.status || 'No BSP found',
+      incidentSummary: { totalIncidents: clientIncidents.length, severity: clientIncidents[0]?.severity || 'None', resolved: clientIncidents.filter((i) => i.status === 'Closed').length },
+      billingTotal: clientClaims.reduce((sum, c) => sum + c.totalAmount, 0),
+      recommendations: ['Continue current intervention strategies', 'Review plan budget utilization with Support Coordinator', 'Schedule participant/family consultation for plan review'],
+      generatedAt: new Date().toISOString(),
+      generatedBy: state.currentUser.name,
+    };
+
+    set((state) => ({ planReviewSummaries: [summary, ...state.planReviewSummaries] }));
+    get().addAuditLog('Generated Plan Review Summary', 'PlanReviewSummary', summary.id, `Compiled review for ${client.name}`);
+    return summary;
+  },
+
+  // ======================================================================
+  // R2: Staff Training Actions
+  // ======================================================================
+
+  addCPDRecord: (recordData) => {
+    const id = `cpd-${Date.now()}`;
+    const newRecord: CPDRecord = { ...recordData, id };
+    set((state) => ({ cpdRecords: [newRecord, ...state.cpdRecords] }));
+    get().addAuditLog('Added CPD Record', 'CPDRecord', id, `${newRecord.hours}hrs: ${newRecord.activityTitle}`);
+  },
+
+  addStaffCredential: (credentialData) => {
+    const id = `cred-${Date.now()}`;
+    const newCred: StaffCredential = { ...credentialData, id };
+    set((state) => ({ staffCredentials: [newCred, ...state.staffCredentials] }));
+    get().addAuditLog('Added Credential', 'StaffCredential', id, `${newCred.credentialType} for ${newCred.practitionerName}`);
+  },
+
+  updateStaffCredential: (id, updates) => {
+    set((state) => ({
+      staffCredentials: state.staffCredentials.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+    }));
+    get().addAuditLog('Updated Credential', 'StaffCredential', id, `Updated credential ${id}`);
+  },
+
+  updateOnboardingItem: (checklistId: string, itemId: string, completed: boolean) => {
+    const user = get().currentUser;
+    set((state) => ({
+      onboardingChecklists: state.onboardingChecklists.map((cl) => {
+        if (cl.id !== checklistId) return cl;
+        const updatedItems = cl.items.map((item: any) => {
+          if (item.id !== itemId) return item;
+          return { ...item, completed, completedDate: completed ? new Date().toISOString().slice(0, 10) : undefined, completedBy: completed ? user.name : undefined };
+        });
+        const allMandatoryDone = updatedItems.filter((i: any) => i.mandatory).every((i: any) => i.completed);
+        return { ...cl, items: updatedItems, status: allMandatoryDone ? ('Complete' as const) : cl.status };
+      }),
+    }));
+    get().addAuditLog('Updated Onboarding Item', 'OnboardingChecklist', checklistId, `Marked item ${itemId} as ${completed ? 'complete' : 'incomplete'}`);
+  },
+
+  addTrainingCompletion: (completionData) => {
+    const id = `tc-${Date.now()}`;
+    const newCompletion: TrainingCompletion = { ...completionData, id };
+    set((state) => ({ trainingCompletions: [newCompletion, ...state.trainingCompletions] }));
+    get().addAuditLog('Completed Training', 'TrainingCompletion', id, `${newCompletion.practitionerName} completed ${newCompletion.moduleTitle} (${newCompletion.quizScore}%)`);
+  },
+
+  // ======================================================================
+  // R3: Referral & Intake Actions
+  // ======================================================================
+
+  addReferral: (referralData) => {
+    const id = `ref-${Date.now()}`;
+    const now = new Date().toISOString();
+    const priorityScore = get().calculatePriorityScore(
+      referralData.triageFields.urgency,
+      referralData.triageFields.complexity,
+      referralData.triageFields.serviceAvailability
+    );
+    const newReferral: Referral = { ...referralData, id, priorityScore, createdAt: now, updatedAt: now };
+    set((state) => ({ referrals: [newReferral, ...state.referrals] }));
+    get().addAuditLog('Created Referral', 'Referral', id, `New referral for ${newReferral.participantName} (score: ${priorityScore})`);
+    get().addEnhancedNotification({
+      title: `New Referral: ${newReferral.participantName}`,
+      message: `${newReferral.source} referral received. Priority score: ${priorityScore}/100.`,
+      category: 'referral',
+      severity: priorityScore > 80 ? 'critical' : priorityScore > 60 ? 'warning' : 'info',
+      escalationTimeoutMinutes: priorityScore > 80 ? 120 : 1440,
+      sourceModule: 'referral-intake',
+      linkTab: 'referral-intake',
+      actionRequired: true,
+      actionLabel: 'Review Referral',
+    });
+  },
+
+  updateReferralStage: (id, stage, handoffNotes) => {
+    const now = new Date().toISOString();
+    set((state) => ({
+      referrals: state.referrals.map((r) => (r.id === id ? { ...r, stage, handoffNotes: handoffNotes || r.handoffNotes, updatedAt: now } : r)),
+    }));
+    get().addAuditLog('Updated Referral Stage', 'Referral', id, `Advanced to ${stage}`);
+  },
+
+  calculatePriorityScore: (urgency, complexity, availability) => {
+    const score = Math.round(((urgency * 3 + complexity * 2 + (6 - availability) * 1) / 30) * 100);
+    return Math.min(100, Math.max(0, score));
+  },
+
+  updateWaitlistPosition: (id, position) => {
+    set((state) => ({
+      waitlist: state.waitlist.map((w) => (w.id === id ? { ...w, position } : w)),
+    }));
+  },
+
+  removeFromWaitlist: (id) => {
+    set((state) => ({
+      waitlist: state.waitlist.filter((w) => w.id !== id),
+    }));
+  },
+
+  generateServiceAgreement: (referralId) => {
+    const state = get();
+    const referral = state.referrals.find((r) => r.id === referralId);
+    if (!referral) return;
+
+    const agreement: ServiceAgreement = {
+      id: `sa-${Date.now()}`,
+      referralId,
+      participantName: referral.participantName,
+      ndisNumber: referral.ndisNumber || 'Pending',
+      dateOfBirth: referral.dateOfBirth,
+      primaryDisability: referral.primaryDisability,
+      planStartDate: new Date().toISOString().slice(0, 10),
+      planEndDate: new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10),
+      serviceCategories: [
+        { category: 'Positive Behaviour Support', allocatedBudget: (referral.estimatedPlanValue || 20000) * 0.7, hourlyRate: 214.41 },
+        { category: 'Capacity Building', allocatedBudget: (referral.estimatedPlanValue || 20000) * 0.3, hourlyRate: 100.14 },
+      ],
+      totalBudget: referral.estimatedPlanValue || 20000,
+      assignedPractitionerId: referral.assignedPractitionerId || '',
+      assignedPractitionerName: referral.assignedPractitionerName || 'Unassigned',
+      status: 'Draft',
+      generatedAt: new Date().toISOString(),
+      agreementMarkdown: `# NDIS Service Agreement\n\n**Participant:** ${referral.participantName}\n**NDIS Number:** ${referral.ndisNumber || 'Pending'}\n**Provider:** Breakthrough Behaviour Support\n**Registration:** 405001234\n\n## Services\n- Positive Behaviour Support\n- Capacity Building\n\n## Funding: $${(referral.estimatedPlanValue || 20000).toLocaleString()} allocated\n\n*DRAFT — Awaiting review and signature*`,
+    };
+
+    set((state) => ({ serviceAgreements: [agreement, ...state.serviceAgreements] }));
+    get().addAuditLog('Generated Service Agreement', 'ServiceAgreement', agreement.id, `Agreement for ${referral.participantName}`);
+  },
+
+  advanceIntakeStage: (assessmentId: string, findings?: string, handoffNotes?: string) => {
+    const now = new Date().toISOString();
+    set((state) => ({
+      intakeAssessments: state.intakeAssessments.map((ia) => {
+        if (ia.id !== assessmentId) return ia;
+        const stageOrder = ['Initial Screen', 'Clinical Assessment', 'Service Matching', 'Onboarding'];
+        const currentIdx = stageOrder.indexOf(ia.currentStage);
+        const updatedStages = ia.stages.map((s: any, idx: number) => {
+          if (idx === currentIdx) return { ...s, status: 'Complete' as const, completedDate: now.slice(0, 10), findings: findings || s.findings, handoffNotes: handoffNotes || s.handoffNotes };
+          if (idx === currentIdx + 1) return { ...s, status: 'In Progress' as const, startedDate: now.slice(0, 10), assignedTo: get().currentUser.name };
+          return s;
+        });
+        const nextStage = currentIdx < stageOrder.length - 1 ? stageOrder[currentIdx + 1] as IntakeAssessment['currentStage'] : ia.currentStage;
+        return { ...ia, stages: updatedStages, currentStage: nextStage, updatedAt: now };
+      }),
+    }));
+    get().addAuditLog('Advanced Intake Stage', 'IntakeAssessment', assessmentId, `Advanced to next stage`);
+  },
+
+  convertReferralToClient: (referralId) => {
+    const state = get();
+    const referral = state.referrals.find((r) => r.id === referralId);
+    if (!referral) return;
+    state.updateReferralStage(referralId, 'Converted');
+    state.addClient({
+      ndisNumber: referral.ndisNumber || `TBD-${Date.now()}`,
+      name: referral.participantName,
+      dateOfBirth: referral.dateOfBirth || '2000-01-01',
+      status: 'Onboarding',
+      primaryDisability: referral.primaryDisability || 'To be assessed',
+      goals: [],
+      planStartDate: new Date().toISOString().slice(0, 10),
+      planEndDate: new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10),
+      totalBudget: referral.estimatedPlanValue || 20000,
+      allocatedBudget: referral.estimatedPlanValue || 20000,
+      spentBudget: 0,
+      primaryPractitionerId: referral.assignedPractitionerId || 'prac-1',
+      primaryPractitionerName: referral.assignedPractitionerName || 'Unassigned',
+      riskLevel: referral.triageFields.riskLevel === 'Critical' ? 'Critical' : referral.triageFields.riskLevel === 'High' ? 'High' : 'Medium',
+      emergencyContact: { name: referral.referrerName, relationship: 'Referrer', phone: referral.referrerPhone },
+      restrictivePracticesActive: false,
+    });
+    get().addAuditLog('Converted Referral to Client', 'Referral', referralId, `${referral.participantName} converted to active client`);
+  },
+
+  // ======================================================================
+  // R5: Enhanced Notification Actions
+  // ======================================================================
+
+  addEnhancedNotification: (notifData) => {
+    const newNotif: EnhancedNotification = {
+      ...notifData,
+      id: `en-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      acknowledged: false,
+      escalationLevel: 0,
+    };
+    set((state) => ({ enhancedNotifications: [newNotif, ...state.enhancedNotifications] }));
+  },
+
+  acknowledgeNotification: (id) => {
+    set((state) => ({
+      enhancedNotifications: state.enhancedNotifications.map((n) =>
+        n.id === id ? { ...n, acknowledged: true, acknowledgedAt: new Date().toISOString(), acknowledgedBy: get().currentUser.name } : n
+      ),
+    }));
+  },
+
+  escalateNotification: (id) => {
+    set((state) => ({
+      enhancedNotifications: state.enhancedNotifications.map((n) =>
+        n.id === id ? { ...n, escalationLevel: n.escalationLevel + 1, escalatedAt: new Date().toISOString() } : n
+      ),
+    }));
+  },
+
+  updateNotificationPreference: (id, updates) => {
+    set((state) => ({
+      notificationPreferences: state.notificationPreferences.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+    }));
+  },
+
+  generateDigest: (period) => {
+    const state = get();
+    const digest: DigestSummary = {
+      id: `dig-${Date.now()}`,
+      period,
+      generatedAt: new Date().toISOString(),
+      activeClients: state.clients.filter((c) => c.status === 'Active').length,
+      sessionsDelivered: state.caseNotes.length,
+      revenueThisPeriod: state.billingClaims.filter((c) => c.status === 'Paid' || c.status === 'Approved').reduce((s, c) => s + c.totalAmount, 0),
+      complianceScore: Math.round((state.staffCredentials.filter((c) => c.status === 'Valid').length / Math.max(state.staffCredentials.length, 1)) * 100),
+      pendingActions: state.enhancedNotifications.filter((n) => n.actionRequired && !n.acknowledged).map((n) => ({ action: n.title, module: n.sourceModule, dueDate: n.timestamp.slice(0, 10), priority: n.severity })),
+      expiringCredentials: state.staffCredentials.filter((c) => c.status === 'Expiring Soon').length,
+      overdueReviews: state.bspDocuments.filter((b) => new Date(b.reviewDate) < new Date()).length,
+      newReferrals: state.referrals.filter((r) => r.stage === 'New').length,
+      incidentsLogged: state.incidents.length,
+    };
+    set((state) => ({ digestSummaries: [digest, ...state.digestSummaries] }));
+    return digest;
+  },
+
+  // ======================================================================
+  // R6: Workflow Automation Actions
+  // ======================================================================
+
+  addTaskAssignment: (taskData) => {
+    const id = `ta-${Date.now()}`;
+    const newTask: TaskAssignment = { ...taskData, id, createdAt: new Date().toISOString(), status: 'Pending' };
+    set((state) => ({ taskAssignments: [newTask, ...state.taskAssignments] }));
+    get().addAuditLog('Created Task Assignment', 'TaskAssignment', id, `Assigned "${newTask.taskTitle}" to ${newTask.assignedToPractitionerName}`);
+  },
+
+  updateTaskStatus: (id, status) => {
+    set((state) => ({
+      taskAssignments: state.taskAssignments.map((t) => (t.id === id ? { ...t, status, completedAt: status === 'Completed' ? new Date().toISOString() : t.completedAt } : t)),
+    }));
+    get().addAuditLog('Updated Task Status', 'TaskAssignment', id, `Status changed to ${status}`);
+  },
+
+  executeBatchAction: (actionData: any) => {
+    const id = `ba-${Date.now()}`;
+    const batchAction: BatchAction = {
+      ...actionData,
+      id,
+      executedAt: new Date().toISOString(),
+      result: 'Success',
+      affectedCount: actionData.targetIds.length,
+    };
+
+    // Execute the batch operation
+    if (actionData.actionType === 'bulk_approve' && actionData.targetModule === 'billing') {
+      actionData.targetIds.forEach((tid: string) => get().updateBillingStatus(tid, 'Approved'));
+    } else if (actionData.actionType === 'bulk_update_status' && actionData.targetModule === 'case-notes') {
+      actionData.targetIds.forEach((tid: string) => get().updateCaseNote(tid, { status: 'Approved' }));
+    }
+
+    set((state) => ({ batchActions: [batchAction, ...state.batchActions] }));
+    get().addAuditLog('Executed Batch Action', 'BatchAction', id, `${actionData.actionType} on ${actionData.targetIds.length} records`);
+  },
+
+  toggleAutomationRule: (id) => {
+    set((state) => ({
+      automationRules: state.automationRules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
+    }));
+  },
+
+  smartAssignTask: (taskTitle, taskType, sourceModule, sourceEntityId) => {
+    const state = get();
+    const practitioners = state.practitioners;
+
+    // Score each practitioner based on expertise (40%), caseload (35%), availability (25%)
+    const scored = practitioners.map((p) => {
+      const expertiseScore = (p.specialties?.some((s) => taskType.toLowerCase().includes(s.toLowerCase())) ? 90 : 50) + (p.historicalSuccessRate ? (p.historicalSuccessRate - 80) : 0);
+      const caseloadScore = Math.max(0, 100 - ((p.activeCaseloadCount / p.caseloadLimit) * 100));
+      const availabilityScore = p.activeCaseloadCount < p.caseloadLimit ? 90 : 30;
+      const total = Math.round(expertiseScore * 0.4 + caseloadScore * 0.35 + availabilityScore * 0.25);
+      return {
+        practitioner: p,
+        score: total,
+        criteria: [
+          { criterion: `${taskType} Expertise`, score: expertiseScore, weight: 0.4 },
+          { criterion: `Caseload (${p.activeCaseloadCount}/${p.caseloadLimit})`, score: caseloadScore, weight: 0.35 },
+          { criterion: 'Availability', score: availabilityScore, weight: 0.25 },
+        ],
+      };
+    }).sort((a, b) => b.score - a.score);
+
+    const best = scored[0];
+    const taskData: Omit<TaskAssignment, 'id' | 'createdAt' | 'status'> = {
+      taskTitle,
+      taskType,
+      sourceModule,
+      sourceEntityId,
+      assignedToPractitionerId: best.practitioner.id,
+      assignedToPractitionerName: best.practitioner.name,
+      matchScore: best.score,
+      matchCriteria: best.criteria,
+      dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    };
+
+    get().addTaskAssignment(taskData);
+    const created = get().taskAssignments[0];
+    return created;
+  },
+}));

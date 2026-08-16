@@ -24,7 +24,9 @@ import {
   FileText,
   RefreshCw,
   Zap,
-  CheckCircle
+  CheckCircle,
+  X,
+  Download
 } from 'lucide-react';
 import {
   PieChart,
@@ -50,6 +52,9 @@ export const ComplianceDashboard: React.FC = () => {
     auditLogs,
     restrictivePractices,
     incidents,
+    bspDocuments,
+    clinicalAssessments,
+    caseNotes,
     practiceBranding,
     updatePracticeBranding,
     generateCommissionAuditPackage,
