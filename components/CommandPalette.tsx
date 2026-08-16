@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Sparkles,
-  Command
+  Command,
+  Building2
 } from 'lucide-react';
 
 export const CommandPalette: React.FC = () => {
@@ -23,6 +24,8 @@ export const CommandPalette: React.FC = () => {
     billingClaims,
     caseNotes,
     incidents,
+    clinics,
+    setClinic,
     setActiveTab
   } = useManagementStore();
 
@@ -79,8 +82,21 @@ export const CommandPalette: React.FC = () => {
       i.severity.toLowerCase().includes(cleanQuery)
   ).slice(0, 4);
 
+  // Search clinics
+  const matchedClinics = clinics.filter(
+    (cl) =>
+      cl.name.toLowerCase().includes(cleanQuery) ||
+      cl.code.toLowerCase().includes(cleanQuery) ||
+      cl.state.toLowerCase().includes(cleanQuery) ||
+      cl.leadPractitionerName.toLowerCase().includes(cleanQuery)
+  ).slice(0, 3);
+
   const totalResults =
-    matchedClients.length + matchedBilling.length + matchedNotes.length + matchedIncidents.length;
+    matchedClients.length +
+    matchedBilling.length +
+    matchedNotes.length +
+    matchedIncidents.length +
+    matchedClinics.length;
 
   const handleNavigate = (tab: TabType) => {
     setActiveTab(tab);
@@ -296,6 +312,44 @@ export const CommandPalette: React.FC = () => {
                     </div>
                     <span className="text-[10px] text-slate-500 font-mono">
                       {new Date(inc.incidentDate).toLocaleDateString()}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Clinic Branches Results */}
+          {matchedClinics.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-teal-400" />
+                Clinic Branches ({matchedClinics.length}) — Click to Switch Active Hub
+              </span>
+              <div className="space-y-1">
+                {matchedClinics.map((clinic) => (
+                  <button
+                    key={clinic.id}
+                    onClick={() => {
+                      setClinic(clinic.id);
+                      setCommandPaletteOpen(false);
+                      setQuery('');
+                    }}
+                    className="w-full text-left p-2.5 bg-slate-950/80 hover:bg-slate-800 rounded-xl border border-slate-800 hover:border-teal-500/50 transition-all flex items-center justify-between group"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white group-hover:text-teal-300 transition-colors">
+                          {clinic.name}
+                        </span>
+                        <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20 font-mono">
+                          {clinic.code}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">{clinic.address} • Lead: {clinic.leadPractitionerName}</p>
+                    </div>
+                    <span className="text-[10px] text-teal-400 font-bold px-2 py-0.5 rounded bg-teal-500/10 border border-teal-500/20">
+                      Switch Branch →
                     </span>
                   </button>
                 ))}
