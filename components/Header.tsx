@@ -30,6 +30,7 @@ import { signInWithGoogle, getCachedAccessToken, auth } from '@/lib/firebase';
 import { PhasedRolloutModal } from '@/components/PhasedRolloutModal';
 import { BranchManagementModal } from '@/components/BranchManagementModal';
 import { OfflineSyncModal } from '@/components/OfflineSyncModal';
+import { GuidedTourModal } from '@/components/GuidedTourModal';
 
 export const Header: React.FC = () => {
   const {
@@ -50,7 +51,8 @@ export const Header: React.FC = () => {
     isOffline,
     setIsOffline,
     offlineQueue,
-    syncOfflineQueue
+    syncOfflineQueue,
+    openTour
   } = useManagementStore();
 
   const [showNotifPopover, setShowNotifPopover] = useState(false);
@@ -88,6 +90,16 @@ export const Header: React.FC = () => {
                 <Rocket className="w-3 h-3 text-teal-400 group-hover:scale-110 transition-transform" />
                 <span className="font-mono font-bold">Phases 1–6 Live</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </button>
+
+              {/* Interactive Guided Clinical Tour Button */}
+              <button
+                onClick={openTour}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-indigo-500/20 to-purple-500/20 hover:from-indigo-500/30 hover:to-purple-500/30 text-indigo-300 border border-indigo-500/40 transition-all cursor-pointer shadow-sm group"
+                title="Start 3-Minute Interactive Clinical Guided Tour"
+              >
+                <Sparkles className="w-3 h-3 text-amber-300 group-hover:scale-110 transition-transform" />
+                <span className="font-mono font-bold">Quick Tour</span>
               </button>
               <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="Live bidirectional sync active with Firebase Firestore database">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -329,6 +341,7 @@ export const Header: React.FC = () => {
     <PhasedRolloutModal isOpen={isRolloutModalOpen} onClose={() => setIsRolloutModalOpen(false)} />
     <BranchManagementModal isOpen={isBranchModalOpen} onClose={() => setIsBranchModalOpen(false)} />
     <OfflineSyncModal isOpen={isOfflineModalOpen} onClose={() => setIsOfflineModalOpen(false)} />
+    <GuidedTourModal />
   </>
   );
 };

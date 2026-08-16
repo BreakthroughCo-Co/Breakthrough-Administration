@@ -26,7 +26,8 @@ export const CommandPalette: React.FC = () => {
     incidents,
     clinics,
     setClinic,
-    setActiveTab
+    setActiveTab,
+    openTour
   } = useManagementStore();
 
   const [query, setQuery] = useState('');
@@ -145,15 +146,25 @@ export const CommandPalette: React.FC = () => {
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2 text-left">Quick Navigation Shortcuts</span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
                   <button
+                    onClick={() => {
+                      setCommandPaletteOpen(false);
+                      openTour();
+                    }}
+                    className="p-2 bg-gradient-to-r from-indigo-950/60 to-purple-950/60 hover:from-indigo-900/60 hover:to-purple-900/60 text-indigo-300 rounded-lg border border-indigo-500/30 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Start Interactive Tour</span>
+                  </button>
+                  <button
                     onClick={() => handleNavigate('integrations')}
-                    className="p-2 bg-slate-950 hover:bg-slate-800 text-teal-300 rounded-lg border border-slate-800 text-xs font-semibold flex items-center gap-2 transition-all"
+                    className="p-2 bg-slate-950 hover:bg-slate-800 text-teal-300 rounded-lg border border-slate-800 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-teal-400" />
                     <span>API Integrations Hub</span>
                   </button>
                   <button
                     onClick={() => handleNavigate('bsp-plans')}
-                    className="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 text-xs font-semibold flex items-center gap-2 transition-all"
+                    className="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5 text-sky-400" />
                     <span>BSP Plan Generator</span>

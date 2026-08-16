@@ -155,7 +155,12 @@ interface ManagementState {
   activeTab: TabType;
   isFirestoreSynced: boolean;
   isLoading: boolean;
+  isTourOpen: boolean;
+  hasCompletedTour: boolean;
 
+  openTour: () => void;
+  closeTour: () => void;
+  completeTour: () => void;
   setActiveTab: (tab: TabType) => void;
   setClinic: (clinicId: string) => void;
   setIsOffline: (offline: boolean) => void;
@@ -249,6 +254,12 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   activeTab: 'command-center',
   isFirestoreSynced: false,
   isLoading: false,
+  isTourOpen: false,
+  hasCompletedTour: false,
+
+  openTour: () => set({ isTourOpen: true }),
+  closeTour: () => set({ isTourOpen: false }),
+  completeTour: () => set({ isTourOpen: false, hasCompletedTour: true }),
 
   setActiveTab: (tab: TabType) => set({ activeTab: tab }),
 
