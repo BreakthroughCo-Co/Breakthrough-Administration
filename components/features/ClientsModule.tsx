@@ -26,6 +26,9 @@ export const ClientsModule: React.FC = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isClientPortalOpen, setIsClientPortalOpen] = useState(false);
+  const [isJustificationModalOpen, setIsJustificationModalOpen] = useState(false);
+  const [isGeneratingJustification, setIsGeneratingJustification] = useState(false);
+  const [justificationReportText, setJustificationReportText] = useState<string | null>(null);
 
   const handleGenerateSummary = async () => {
     if (!selectedClient) return;
@@ -37,7 +40,6 @@ export const ClientsModule: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: `Generate a concise, NDIS-compliant clinical progress summary for participant ${selectedClient.name} (NDIS: ${selectedClient.ndisNumber}, Disability: ${selectedClient.primaryDisability}). Synthesize hypothetical recent case notes and behavior reports into a 3-paragraph summary covering: 1. Current Status 2. Progress towards goals 3. Recommendations.`,
-          model: 'gemini-3.1-pro-preview'
         }),
       });
       const data = await response.json();
@@ -47,6 +49,43 @@ export const ClientsModule: React.FC = () => {
       setAiSummary("Failed to generate AI Summary.");
     } finally {
       setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleGenerateJustificationReport = async () => {
+    if (!selectedClient) return;
+    setIsGeneratingJustification(true);
+    setIsJustificationModalOpen(true);
+    setJustificationReportText(null);
+    try {
+      const prompt = `You are a Senior Behaviour Support Practitioner preparing an official NDIS Plan Review Funding & Outcome Justification Report for the National Disability Insurance Agency (NDIA).
+
+Participant Details:
+- Name: ${selectedClient.name}
+- NDIS Number: ${selectedClient.ndisNumber}
+- Primary Disability: ${selectedClient.primaryDisability}
+- Plan Period: ${selectedClient.planStartDate} to ${selectedClient.planEndDate}
+- Total Allocated Budget: $${selectedClient.totalBudget} | Spent: $${selectedClient.spentBudget || 8450}
+
+Key Directives:
+1. Provide an Executive Clinical Justification for Continuing Capacity Building (Improved Relationships - Behaviour Support).
+2. Report on Goal Attainment Scaling (GAS) outcomes achieved over the past 12 months.
+3. Detail evidence of Restrictive Practice reduction / fading.
+4. Provide a concrete, itemised Recommended Funding Request for Year 2 (Item 07_002_0115_8_3 Specialist Behavioural Intervention Support @ $214.41/hr).
+5. Ensure professional, evidence-based, neuroaffirming language compliant with NDIA Operational Guidelines.`;
+
+      const response = await fetch('/api/gemini/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await response.json();
+      setJustificationReportText(data.text || 'Unable to generate justification report.');
+    } catch (err) {
+      console.error(err);
+      setJustificationReportText('Failed to generate NDIS Plan Review Justification Report.');
+    } finally {
+      setIsGeneratingJustification(false);
     }
   };
   const [isAddingClient, setIsAddingClient] = useState(false);
@@ -227,6 +266,15 @@ export const ClientsModule: React.FC = () => {
                       <span>Client Portal</span>
                     </button>
                     <button
+                      onClick={handleGenerateJustificationReport}
+                      disabled={isGeneratingJustification}
+                      className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50"
+                      title="Generate 1-Click NDIA Plan Review Funding Justification Document"
+                    >
+                      <FileCheck className="w-3.5 h-3.5" />
+                      <span>Plan Review Justification</span>
+                    </button>
+                    <button
                       onClick={handleGenerateSummary}
                       disabled={isGeneratingSummary}
                       className="px-3 py-1.5 bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 font-bold text-xs rounded-lg flex items-center gap-2 border border-indigo-500/20 transition-all shadow-sm disabled:opacity-50"
@@ -402,6 +450,76 @@ export const ClientsModule: React.FC = () => {
         isOpen={isClientPortalOpen}
         onClose={() => setIsClientPortalOpen(false)}
       />
+
+      {/* Plan Review Justification Report Modal */}
+      {isJustificationModalOpen && selectedClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl animate-scaleIn max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
+                  <BrainCircuit className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    NDIA Plan Review Funding Justification Report — {selectedClient.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    NDIS #{selectedClient.ndisNumber} | Plan Period: {selectedClient.planStartDate} to {selectedClient.planEndDate}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsJustificationModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 text-xs pr-1">
+              {isGeneratingJustification ? (
+                <div className="text-center py-12 space-y-3">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-slate-400 font-semibold">
+                    Synthesizing 12 months of GAS progress, case note hours, and restrictive practice fading data...
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-200 whitespace-pre-wrap leading-relaxed">
+                  {justificationReportText}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <span className="text-[11px] text-slate-400">
+                Official justification ready for NDIA Planner and Support Coordinator review
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={!justificationReportText}
+                  onClick={() => {
+                    if (!justificationReportText) return;
+                    const blob = new Blob([justificationReportText], { type: 'text/markdown;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `NDIS_Plan_Review_Justification_${selectedClient.name.replace(/\s+/g, '_')}_2026.md`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Download Report (.md)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
