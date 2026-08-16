@@ -18,9 +18,12 @@ import {
   Clock,
   Sparkles,
   Wifi,
+  WifiOff,
   Database,
   Globe,
-  LogIn
+  LogIn,
+  Building2,
+  RefreshCw
 } from 'lucide-react';
 import { signInWithGoogle, getCachedAccessToken, auth } from '@/lib/firebase';
 
@@ -36,7 +39,14 @@ export const Header: React.FC = () => {
     dismissNotification,
     setActiveTab,
     theme,
-    toggleTheme
+    toggleTheme,
+    clinics,
+    currentClinicId,
+    setClinic,
+    isOffline,
+    setIsOffline,
+    offlineQueue,
+    syncOfflineQueue
   } = useManagementStore();
 
   const [showNotifPopover, setShowNotifPopover] = useState(false);
@@ -69,6 +79,55 @@ export const Header: React.FC = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <Database className="w-3 h-3 text-emerald-400" />
               <span>Firestore Synced</span>
+            </div>
+
+            {/* Offline Status & Sync Trigger */}
+            {isOffline ? (
+              <button
+                onClick={() => {
+                  setIsOffline(false);
+                  syncOfflineQueue();
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse"
+                title="App is running in offline mode. Click to simulate network reconnect & sync."
+              >
+                <WifiOff className="w-3 h-3 text-amber-400" />
+                <span>Offline ({offlineQueue.filter((q) => q.status === 'PENDING').length} queued)</span>
+              </button>
+            ) : offlineQueue.some((q) => q.status === 'PENDING') ? (
+              <button
+                onClick={syncOfflineQueue}
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30 hover:bg-teal-500/25 transition-colors"
+                title="Pending records in offline queue. Click to sync."
+              >
+                <RefreshCw className="w-3 h-3 text-teal-400 animate-spin" />
+                <span>Sync ({offlineQueue.filter((q) => q.status === 'PENDING').length})</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsOffline(true)}
+                className="hidden xl:flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700 transition-colors"
+                title="Click to simulate offline field visit mode"
+              >
+                <Wifi className="w-3 h-3 text-emerald-400" />
+                <span>Online</span>
+              </button>
+            )}
+
+            {/* Multi-Clinic Branch Switcher */}
+            <div className="hidden 2xl:flex items-center gap-1.5 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800 text-[10px]">
+              <Building2 className="w-3 h-3 text-teal-400 shrink-0" />
+              <select
+                value={currentClinicId}
+                onChange={(e) => setClinic(e.target.value)}
+                className="bg-transparent text-slate-200 font-bold focus:outline-none cursor-pointer"
+              >
+                {clinics.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                    {c.code} • {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <p className="text-[11px] text-slate-400 hidden lg:block">

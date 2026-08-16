@@ -23,7 +23,10 @@ import {
   PRODABatch,
   ClinicalAssessmentRecord,
   PracticeBrandingConfig,
-  NDISCommissionAuditPackage
+  NDISCommissionAuditPackage,
+  ClinicBranch,
+  ExtractedClinicalReport,
+  OfflineSyncQueueItem
 } from '@/types';
 import {
   INITIAL_USERS,
@@ -46,7 +49,9 @@ import {
   INITIAL_CALENDAR_EVENTS,
   INITIAL_COPILOT_MESSAGES,
   INITIAL_CLINICAL_ASSESSMENTS,
-  DEFAULT_PRACTICE_BRANDING
+  DEFAULT_PRACTICE_BRANDING,
+  INITIAL_CLINICS,
+  INITIAL_EXTRACTED_REPORTS
 } from '@/lib/mock-data';
 
 import { create } from 'zustand';
@@ -138,6 +143,11 @@ interface ManagementState {
   aiCopilotHistory: AICopilotMessage[];
   clinicalAssessments: ClinicalAssessmentRecord[];
   practiceBranding: PracticeBrandingConfig;
+  clinics: ClinicBranch[];
+  currentClinicId: string;
+  extractedReports: ExtractedClinicalReport[];
+  offlineQueue: OfflineSyncQueueItem[];
+  isOffline: boolean;
   isAICopilotOpen: boolean;
   selectedCopilotClientId: string;
   theme: 'dark' | 'light';
@@ -147,6 +157,8 @@ interface ManagementState {
   isLoading: boolean;
 
   setActiveTab: (tab: TabType) => void;
+  setClinic: (clinicId: string) => void;
+  setIsOffline: (offline: boolean) => void;
   switchUser: (userId: string) => void;
   setUserRole: (role: UserRole) => void;
   toggleTheme: () => void;
@@ -189,6 +201,10 @@ interface ManagementState {
   addClinicalAssessment: (assessment: Omit<ClinicalAssessmentRecord, 'id'>) => void;
   updatePracticeBranding: (branding: Partial<PracticeBrandingConfig>) => void;
   generateCommissionAuditPackage: (participantId: string) => NDISCommissionAuditPackage;
+  addExtractedReport: (report: Omit<ExtractedClinicalReport, 'id'>) => void;
+  transferReportToBsp: (reportId: string, clientId: string) => void;
+  addOfflineQueueItem: (item: Omit<OfflineSyncQueueItem, 'id' | 'createdAt' | 'status'>) => void;
+  syncOfflineQueue: () => Promise<void>;
   addAuditLog: (action: string, entity: string, entityId: string, details: string) => void;
   addCommunication: (comm: Omit<CommunicationLog, 'id' | 'timestamp'>) => void;
 }
@@ -217,6 +233,11 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   aiCopilotHistory: INITIAL_COPILOT_MESSAGES,
   clinicalAssessments: INITIAL_CLINICAL_ASSESSMENTS,
   practiceBranding: DEFAULT_PRACTICE_BRANDING,
+  clinics: INITIAL_CLINICS,
+  currentClinicId: INITIAL_CLINICS[0]?.id || 'clinic-melb-cbd',
+  extractedReports: INITIAL_EXTRACTED_REPORTS,
+  offlineQueue: [],
+  isOffline: false,
   isAICopilotOpen: false,
   selectedCopilotClientId: INITIAL_CLIENTS[0]?.id || 'cli-101',
   theme: 'dark',
@@ -226,6 +247,13 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   isLoading: false,
 
   setActiveTab: (tab: TabType) => set({ activeTab: tab }),
+
+  setClinic: (clinicId: string) => {
+    set({ currentClinicId: clinicId });
+    get().addAuditLog('Switched Clinic Branch', 'ClinicBranch', clinicId, `Active clinic branch updated to ${clinicId}`);
+  },
+
+  setIsOffline: (offline: boolean) => set({ isOffline: offline }),
 
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
 
@@ -702,6 +730,93 @@ ${clientPractices.map(rp => `  - **${rp.practiceType}**: ${rp.description} (Ref:
     );
 
     return pkg;
+  },
+
+  addExtractedReport: (reportData) => {
+    const newRep: ExtractedClinicalReport = {
+      ...reportData,
+      id: `rep-${Date.now()}`,
+    };
+    set((state) => ({ extractedReports: [newRep, ...state.extractedReports] }));
+    get().addAuditLog('Ingested Medical Report', 'ExtractedClinicalReport', newRep.id, `Parsed ${newRep.fileName} for ${newRep.clientName}`);
+  },
+
+  transferReportToBsp: (reportId, clientId) => {
+    const state = get();
+    const report = state.extractedReports.find((r) => r.id === reportId);
+    if (!report) return;
+
+    const clientBsp = state.bspDocuments.find((b) => b.clientId === clientId);
+    if (clientBsp) {
+      const updatedStrategies = [
+        ...(clientBsp.proactiveStrategies || []),
+        ...report.recommendedStrategies.map((s, idx) => ({
+          id: `strat-auto-${Date.now()}-${idx}`,
+          title: `Report Strategy: ${s.slice(0, 40)}...`,
+          category: 'Environmental Modification',
+          description: s,
+          implementationContext: 'Direct extraction from specialist medical assessment report.',
+          responsibleRoles: ['Support Worker', 'Behaviour Support Practitioner'],
+        })),
+      ];
+
+      state.updateBSPDocument(clientBsp.id, {
+        proactiveStrategies: updatedStrategies,
+        status: 'Draft',
+      });
+    }
+
+    set((state) => ({
+      extractedReports: state.extractedReports.map((r) =>
+        r.id === reportId ? { ...r, status: 'TRANSFERRED_TO_BSP' } : r
+      ),
+    }));
+
+    get().addNotification({
+      title: 'Report Transferred to BSP',
+      message: `Transferred ${report.recommendedStrategies.length} strategies from ${report.fileName} into active Behaviour Support Plan.`,
+      type: 'compliance',
+      severity: 'info',
+      linkTab: 'bsp-creator',
+    });
+
+    get().addAuditLog('Transferred Report to BSP', 'BSPDocument', clientId, `Integrated medical report ${report.fileName} into BSP`);
+  },
+
+  addOfflineQueueItem: (itemData) => {
+    const newItem: OfflineSyncQueueItem = {
+      ...itemData,
+      id: `off-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      status: 'PENDING',
+    };
+    set((state) => ({ offlineQueue: [...state.offlineQueue, newItem] }));
+  },
+
+  syncOfflineQueue: async () => {
+    const state = get();
+    const pendingItems = state.offlineQueue.filter((i) => i.status === 'PENDING');
+    if (pendingItems.length === 0) return;
+
+    for (const item of pendingItems) {
+      if (item.entityType === 'CASE_NOTE') {
+        state.addCaseNote(item.payload);
+      } else if (item.entityType === 'ABC_LOG') {
+        state.addABCLog(item.payload);
+      }
+    }
+
+    set((state) => ({
+      offlineQueue: state.offlineQueue.map((i) => ({ ...i, status: 'SYNCED' })),
+    }));
+
+    get().addNotification({
+      title: 'Offline Sync Complete',
+      message: `Successfully synchronized ${pendingItems.length} records to cloud ledger.`,
+      type: 'compliance',
+      severity: 'info',
+      linkTab: 'audit-logs',
+    });
   },
 
   addAuditLog: (action, entity, entityId, details) => {

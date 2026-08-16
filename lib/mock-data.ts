@@ -20,7 +20,10 @@ import {
   AICopilotMessage,
   ClinicalAssessmentRecord,
   PracticeBrandingConfig,
-  NDISCommissionAuditPackage
+  NDISCommissionAuditPackage,
+  ClinicBranch,
+  ExtractedClinicalReport,
+  OfflineSyncQueueItem
 } from '@/types';
 
 export const INITIAL_USERS: UserProfile[] = [
@@ -1049,5 +1052,75 @@ export const DEFAULT_PRACTICE_BRANDING: PracticeBrandingConfig = {
   reportHeaderNotice: 'CONFIDENTIAL NDIS ALLIED HEALTH CLINICAL RECORD — PROTECTED UNDER PRIVACY ACT 1988 & NDIS ACT 2013',
   reportFooterDisclaimer: 'Breakthrough Coaching & Behaviour Support is a Registered NDIS Provider (Registration ID: 405001234). All Positive Behaviour Support Plans and Restrictive Practice audits comply strictly with NDIS Quality and Safeguards Commission Rules 2018.',
 };
+
+export const INITIAL_CLINICS: ClinicBranch[] = [
+  {
+    id: 'clinic-melb-cbd',
+    name: 'Melbourne CBD Flagship Clinic',
+    code: 'VIC-CBD',
+    state: 'VIC',
+    address: 'Suite 402, 120 Collins Street, Melbourne VIC 3000',
+    phone: '(03) 9000 1200',
+    email: 'melbourne@breakthrough.org.au',
+    leadPractitionerName: 'Dr. Sarah Jenkins',
+    activeCaseloadCount: 24,
+  },
+  {
+    id: 'clinic-geelong',
+    name: 'Geelong & Surf Coast Regional Hub',
+    code: 'VIC-GLG',
+    state: 'VIC',
+    address: 'Level 1, 88 Moorabool Street, Geelong VIC 3220',
+    phone: '(03) 5200 8900',
+    email: 'geelong@breakthrough.org.au',
+    leadPractitionerName: 'Marcus Vance',
+    activeCaseloadCount: 16,
+  },
+  {
+    id: 'clinic-sydney-east',
+    name: 'Sydney Specialist PBS & Autism Center',
+    code: 'NSW-SYD',
+    state: 'NSW',
+    address: 'Suite 12, 155 George Street, Sydney NSW 2000',
+    phone: '(02) 8000 4500',
+    email: 'sydney@breakthrough.org.au',
+    leadPractitionerName: 'Elena Rostova',
+    activeCaseloadCount: 19,
+  },
+];
+
+export const INITIAL_EXTRACTED_REPORTS: ExtractedClinicalReport[] = [
+  {
+    id: 'rep-1',
+    clientId: 'cli-101',
+    clientName: 'Jordan Miller',
+    fileName: 'Jordan_Miller_Royal_Childrens_Hospital_Neuro_2026.pdf',
+    uploadDate: '2026-07-28',
+    reportType: 'Paediatric Assessment',
+    extractedDiagnoses: [
+      'Autism Spectrum Disorder (Level 3 - DSM-5-TR 299.00)',
+      'Sensory Processing Sensitivity with Auditory Hyper-reactivity (ICD-11 6A02.3)',
+      'Developmental Coordination Challenge'
+    ],
+    sensorySensitivities: [
+      'Acoustic reverberation > 75dB triggers autonomic fight/flight escalation',
+      'Tactile sensitivity to stiff clothing tags and unannounced touch',
+      'Visual discomfort under flickering 50Hz fluorescent lighting'
+    ],
+    antecedentTriggers: [
+      'Abrupt task cessation without visual countdown timer',
+      'Unstructured transitions in high-density communal hallways',
+      'Receptive verbal overload (> 5 word instructions)'
+    ],
+    recommendedStrategies: [
+      'Provision of acoustic noise-cancelling headphones prior to transit',
+      'Use 3-step visual schedule with high-contrast icon strip',
+      '10-minute proprioceptive heavy-work breaks every 2 hours'
+    ],
+    summaryNarrative: 'Comprehensive neurological assessment confirms Level 3 Autism Spectrum Disorder with pronounced sensory modulation difficulties. Highlights critical importance of environmental modifications and visual communication supports to prevent sensory overload.',
+    status: 'TRANSFERRED_TO_BSP',
+  },
+];
+
 
 

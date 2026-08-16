@@ -5,7 +5,8 @@ import { useManagementStore } from '@/stores/useManagementStore';
 import { Client } from '@/types';
 import { GoalTracker } from '@/components/GoalTracker';
 import { ClientPortalModal } from './ClientPortalModal';
-import { BrainCircuit, Share2, MapPin, Video } from 'lucide-react';
+import { DocumentIngestionModal } from './DocumentIngestionModal';
+import { BrainCircuit, Share2, MapPin, Video, Upload, FileCheck } from 'lucide-react';
 import {
   Users,
   Search,
@@ -26,6 +27,7 @@ export const ClientsModule: React.FC = () => {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isClientPortalOpen, setIsClientPortalOpen] = useState(false);
+  const [isDocumentIngestionOpen, setIsDocumentIngestionOpen] = useState(false);
   const [isJustificationModalOpen, setIsJustificationModalOpen] = useState(false);
   const [isGeneratingJustification, setIsGeneratingJustification] = useState(false);
   const [justificationReportText, setJustificationReportText] = useState<string | null>(null);
@@ -266,6 +268,14 @@ Key Directives:
                       <span>Client Portal</span>
                     </button>
                     <button
+                      onClick={() => setIsDocumentIngestionOpen(true)}
+                      className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
+                      title="Upload paediatric / OT / hospital PDF reports to extract diagnostic markers and strategies directly into BSP"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Ingest Medical Report</span>
+                    </button>
+                    <button
                       onClick={handleGenerateJustificationReport}
                       disabled={isGeneratingJustification}
                       className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50"
@@ -443,6 +453,13 @@ Key Directives:
           </div>
         </div>
       )}
+
+      {/* Multimodal Medical Document Ingestion Modal */}
+      <DocumentIngestionModal
+        client={selectedClient}
+        isOpen={isDocumentIngestionOpen}
+        onClose={() => setIsDocumentIngestionOpen(false)}
+      />
 
       {/* Secure Client Portal & Family Share Modal */}
       <ClientPortalModal

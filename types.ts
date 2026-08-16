@@ -417,4 +417,41 @@ export interface NDISCommissionAuditPackage {
   compiledMarkdown: string;
 }
 
+export interface ClinicBranch {
+  id: string;
+  name: string;
+  code: string;
+  state: 'VIC' | 'NSW' | 'QLD' | 'WA' | 'SA' | 'TAS' | 'ACT' | 'NT';
+  address: string;
+  phone: string;
+  email: string;
+  leadPractitionerName: string;
+  activeCaseloadCount: number;
+}
+
+export interface ExtractedClinicalReport {
+  id: string;
+  clientId: string;
+  clientName: string;
+  fileName: string;
+  uploadDate: string;
+  reportType: 'Paediatric Assessment' | 'OT Sensory Profile' | 'Psychiatric Evaluation' | 'Hospital Discharge' | 'Speech Pathology';
+  extractedDiagnoses: string[];
+  sensorySensitivities: string[];
+  antecedentTriggers: string[];
+  recommendedStrategies: string[];
+  summaryNarrative: string;
+  status: 'PENDING_REVIEW' | 'TRANSFERRED_TO_BSP' | 'ARCHIVED';
+}
+
+export interface OfflineSyncQueueItem {
+  id: string;
+  entityType: 'CASE_NOTE' | 'ABC_LOG' | 'INCIDENT' | 'ASSESSMENT';
+  action: 'CREATE' | 'UPDATE';
+  payload: any;
+  createdAt: string;
+  status: 'PENDING' | 'SYNCED' | 'FAILED';
+}
+
+
 
