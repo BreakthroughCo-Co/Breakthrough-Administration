@@ -82,11 +82,11 @@ export const Header: React.FC = () => {
               </h1>
               <button
                 onClick={() => setIsRolloutModalOpen(true)}
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 transition-all cursor-pointer shadow-sm group"
-                title="View Breakthrough OS Multi-Phase Product Rollout Schedule"
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-teal-500/20 to-emerald-500/20 hover:from-teal-500/30 hover:to-emerald-500/30 text-teal-300 border border-teal-500/40 transition-all cursor-pointer shadow-sm group"
+                title="View Breakthrough OS Multi-Phase Product Rollout Schedule (All Phases 1-6 100% Deployed)"
               >
                 <Rocket className="w-3 h-3 text-teal-400 group-hover:scale-110 transition-transform" />
-                <span className="font-mono">Stage 1 Live</span>
+                <span className="font-mono font-bold">Phases 1–6 Live</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </button>
               <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="Live bidirectional sync active with Firebase Firestore database">

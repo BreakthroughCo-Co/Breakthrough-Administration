@@ -41,6 +41,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { exportParticipantToFHIRBundle, downloadFHIRBundle } from '@/lib/fhir-exporter';
 
 export const ComplianceDashboard: React.FC = () => {
   const {
@@ -886,7 +887,23 @@ export const ComplianceDashboard: React.FC = () => {
               <span className="text-[11px] text-slate-400">
                 Ready for submission to NDIS Lead Auditor or Senior Practitioner
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    const client = clients.find((c) => c.name === activeAuditPackage.targetParticipantName) || clients[0];
+                    const bsp = bspDocuments.find((b) => b.clientId === client.id);
+                    const clientAssessments = clinicalAssessments.filter((a) => a.clientId === client.id);
+                    const clientNotes = caseNotes.filter((n) => n.clientId === client.id);
+                    const bundle = exportParticipantToFHIRBundle(client, bsp, clientAssessments, clientNotes);
+                    downloadFHIRBundle(bundle, client.name);
+                  }}
+                  className="px-3.5 py-2 bg-indigo-950/70 hover:bg-indigo-900/70 text-indigo-300 border border-indigo-500/40 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                  title="Export standard HL7 FHIR R4 Bundle JSON for My Health Record / Hospital Systems"
+                >
+                  <FileText className="w-4 h-4 text-indigo-400" />
+                  <span>Download FHIR R4 Bundle (.json)</span>
+                </button>
+
                 <button
                   onClick={() => {
                     const blob = new Blob([activeAuditPackage.compiledMarkdown], { type: 'text/markdown;charset=utf-8;' });
@@ -898,7 +915,7 @@ export const ComplianceDashboard: React.FC = () => {
                     link.click();
                     document.body.removeChild(link);
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Full Audit Bundle (.md)</span>
