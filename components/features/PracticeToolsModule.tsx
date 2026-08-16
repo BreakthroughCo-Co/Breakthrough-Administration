@@ -28,9 +28,26 @@ import {
 } from 'lucide-react';
 
 export const PracticeToolsModule: React.FC = () => {
-  const { clients, currentUser, addCaseNote, updateClientGoal } = useManagementStore();
+  const {
+    clients,
+    currentUser,
+    clinicalAssessments,
+    addClinicalAssessment,
+    addCaseNote,
+    updateClientGoal,
+    addNotification,
+    addAuditLog
+  } = useManagementStore();
   const [selectedClientId, setSelectedClientId] = useState(clients[0]?.id || 'cli-101');
-  const [activeTab, setActiveTab] = useState<'social-stories' | 'lego' | 'gas-tracker'>('social-stories');
+  const [activeTab, setActiveTab] = useState<'social-stories' | 'lego' | 'gas-tracker' | 'assessments'>('social-stories');
+
+  // Clinical Assessments State
+  const [selectedAssessmentTool, setSelectedAssessmentTool] = useState<'Vineland-3' | 'Sensory Profile 2' | 'VB-MAPP' | 'ABLLS-R' | 'PEDI-CAT'>('Vineland-3');
+  const [assessmentDomain1, setAssessmentDomain1] = useState(72);
+  const [assessmentDomain2, setAssessmentDomain2] = useState(65);
+  const [assessmentDomain3, setAssessmentDomain3] = useState(80);
+  const [assessmentInterpretation, setAssessmentInterpretation] = useState('');
+  const [isGeneratingAssessmentAi, setIsGeneratingAssessmentAi] = useState(false);
 
   // Social Story Generator State
   const [socialStoryPrompt, setSocialStoryPrompt] = useState({
@@ -338,6 +355,17 @@ Return a valid JSON object with:
           >
             <TrendingUp className="w-3.5 h-3.5" />
             <span>GAS Goal Scaling</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('assessments')}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              activeTab === 'assessments'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Assessments ({clinicalAssessments.length})</span>
           </button>
         </div>
       </div>
@@ -809,6 +837,236 @@ Return a valid JSON object with:
                 )}
               </div>
             ))}
+      {/* TAB 4: STANDARDISED CLINICAL ASSESSMENTS */}
+      {activeTab === 'assessments' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Top Banner & Assessment Tool Selector */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-purple-400" />
+                  Allied Health Standardised Assessment Protocol Studio
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Vineland-3, Sensory Profile 2, VB-MAPP, and ABLLS-R domain scoring with AI diagnostic narrative synthesis.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {(['Vineland-3', 'Sensory Profile 2', 'VB-MAPP', 'ABLLS-R', 'PEDI-CAT'] as const).map((tool) => (
+                  <button
+                    key={tool}
+                    onClick={() => setSelectedAssessmentTool(tool)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                      selectedAssessmentTool === tool
+                        ? 'bg-purple-600 text-white border-purple-400 shadow-sm'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {tool}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Assessment Input Matrix */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 font-bold">
+                    {selectedAssessmentTool === 'Sensory Profile 2' ? 'Auditory Processing' : 'Communication & Receptive'}
+                  </span>
+                  <span className="font-mono text-purple-400 font-bold">{assessmentDomain1} pts</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="120"
+                  value={assessmentDomain1}
+                  onChange={(e) => setAssessmentDomain1(Number(e.target.value))}
+                  className="w-full accent-purple-500"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Level: {assessmentDomain1 < 70 ? 'Extremely Low' : assessmentDomain1 < 85 ? 'Moderately Low' : 'Adequate Adaptive'}
+                </span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 font-bold">
+                    {selectedAssessmentTool === 'Sensory Profile 2' ? 'Tactile / Touch' : 'Daily Living Skills'}
+                  </span>
+                  <span className="font-mono text-purple-400 font-bold">{assessmentDomain2} pts</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="120"
+                  value={assessmentDomain2}
+                  onChange={(e) => setAssessmentDomain2(Number(e.target.value))}
+                  className="w-full accent-purple-500"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Level: {assessmentDomain2 < 70 ? 'Extremely Low' : assessmentDomain2 < 85 ? 'Moderately Low' : 'Adequate Adaptive'}
+                </span>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 font-bold">
+                    {selectedAssessmentTool === 'Sensory Profile 2' ? 'Vestibular / Proprioception' : 'Socialization & Interpersonal'}
+                  </span>
+                  <span className="font-mono text-purple-400 font-bold">{assessmentDomain3} pts</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="120"
+                  value={assessmentDomain3}
+                  onChange={(e) => setAssessmentDomain3(Number(e.target.value))}
+                  className="w-full accent-purple-500"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Level: {assessmentDomain3 < 70 ? 'Extremely Low' : assessmentDomain3 < 85 ? 'Moderately Low' : 'Adequate Adaptive'}
+                </span>
+              </div>
+            </div>
+
+            {/* AI Narrative Generator Button & Narrative Preview */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  Clinical Diagnostic Interpretation & Evidence Narrative
+                </span>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsGeneratingAssessmentAi(true);
+                    try {
+                      const prompt = `Generate an authoritative NDIS Allied Health clinical diagnostic summary for participant ${selectedClient.name} based on the ${selectedAssessmentTool} assessment results:
+- Domain 1 Score: ${assessmentDomain1}
+- Domain 2 Score: ${assessmentDomain2}
+- Domain 3 Score: ${assessmentDomain3}
+Provide:
+1. Executive Clinical Interpretation (2 paragraphs)
+2. 3 Evidence-based PBS Recommendations for Support Workers`;
+
+                      const res = await fetch('/api/gemini/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt }),
+                      });
+                      const data = await res.json();
+                      if (data.text) {
+                        setAssessmentInterpretation(data.text);
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsGeneratingAssessmentAi(false);
+                    }
+                  }}
+                  disabled={isGeneratingAssessmentAi}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                >
+                  {isGeneratingAssessmentAi ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  <span>AI Generate Diagnostic Narrative</span>
+                </button>
+              </div>
+
+              <textarea
+                rows={4}
+                value={assessmentInterpretation}
+                onChange={(e) => setAssessmentInterpretation(e.target.value)}
+                placeholder="Click 'AI Generate Diagnostic Narrative' or enter clinical interpretation here..."
+                className="clinical-textarea text-xs"
+              />
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    addClinicalAssessment({
+                      clientId: selectedClient.id,
+                      clientName: selectedClient.name,
+                      practitionerId: currentUser.practitionerId || 'prac-1',
+                      practitionerName: currentUser.name,
+                      assessmentTool: selectedAssessmentTool,
+                      assessmentDate: new Date().toISOString().slice(0, 10),
+                      domainScores: [
+                        { domainName: 'Domain 1', rawScore: assessmentDomain1, adaptiveLevel: assessmentDomain1 < 70 ? 'Extremely Low' : 'Adequate' },
+                        { domainName: 'Domain 2', rawScore: assessmentDomain2, adaptiveLevel: assessmentDomain2 < 70 ? 'Extremely Low' : 'Adequate' },
+                        { domainName: 'Domain 3', rawScore: assessmentDomain3, adaptiveLevel: assessmentDomain3 < 70 ? 'Extremely Low' : 'Adequate' },
+                      ],
+                      clinicalInterpretation: assessmentInterpretation || 'Standardised clinical assessment completed.',
+                      recommendations: [
+                        'Provide visual schedule support during transitions',
+                        'Incorporate sensory breaks every 90 minutes',
+                      ],
+                      status: 'COMPLETED',
+                    });
+                    addNotification({
+                      title: 'Assessment Logged',
+                      message: `Saved ${selectedAssessmentTool} record for ${selectedClient.name}.`,
+                      type: 'compliance',
+                      severity: 'info',
+                      linkTab: 'practice-tools',
+                    });
+                    setAssessmentInterpretation('');
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Commit Assessment to Participant Clinical Vault</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Assessment History for Participant */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-purple-400" />
+              Standardised Assessment Records on File ({clinicalAssessments.filter((a) => a.clientId === selectedClient.id).length})
+            </h4>
+
+            <div className="space-y-3">
+              {clinicalAssessments
+                .filter((a) => a.clientId === selectedClient.id)
+                .map((ass) => (
+                  <div key={ass.id} className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">{ass.assessmentTool}</span>
+                        <span className="text-[10px] bg-purple-500/10 text-purple-300 font-mono px-2 py-0.5 rounded border border-purple-500/20 font-bold">
+                          {ass.status}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-mono">{ass.assessmentDate}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                      {ass.domainScores.map((ds, idx) => (
+                        <div key={idx} className="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                          <span className="text-slate-400 block text-[10px]">{ds.domainName}</span>
+                          <span className="text-purple-300 font-bold">{ds.rawScore} pts ({ds.adaptiveLevel})</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-slate-300 text-[11px] leading-relaxed bg-slate-900/50 p-2.5 rounded-lg border border-slate-900">
+                      {ass.clinicalInterpretation}
+                    </p>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       )}

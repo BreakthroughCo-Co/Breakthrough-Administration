@@ -244,6 +244,48 @@ export const ClientsModule: React.FC = () => {
                   </div>
                 </div>
 
+                {/* NDIS Budget Utilization & Burn Rate Forecaster */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      <span className="font-bold text-slate-200">NDIS Capacity Building Budget Utilization</span>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold">
+                      {Math.round(((selectedClient.spentBudget || 8450) / (selectedClient.totalBudget || 35000)) * 100)}% Spent
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-teal-500 to-emerald-500 h-2.5 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round(((selectedClient.spentBudget || 8450) / (selectedClient.totalBudget || 35000)) * 100)
+                        )}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Total Plan Value</span>
+                      <span className="text-white font-bold">${(selectedClient.totalBudget || 35000).toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Spent / Claimed</span>
+                      <span className="text-emerald-400 font-bold">${(selectedClient.spentBudget || 8450).toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Funds Remaining</span>
+                      <span className="text-teal-300 font-bold">
+                        ${((selectedClient.totalBudget || 35000) - (selectedClient.spentBudget || 8450)).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Emergency Contact */}
                 {aiSummary && (
                   <div className="p-4 bg-indigo-950/30 rounded-xl border border-indigo-500/30 space-y-2 text-xs">

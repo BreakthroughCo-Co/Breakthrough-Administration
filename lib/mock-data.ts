@@ -17,7 +17,10 @@ import {
   PRODABatch,
   GoogleDriveFile,
   GoogleCalendarEvent,
-  AICopilotMessage
+  AICopilotMessage,
+  ClinicalAssessmentRecord,
+  PracticeBrandingConfig,
+  NDISCommissionAuditPackage
 } from '@/types';
 
 export const INITIAL_USERS: UserProfile[] = [
@@ -985,4 +988,66 @@ export const INITIAL_COPILOT_MESSAGES: AICopilotMessage[] = [
     ],
   },
 ];
+
+export const INITIAL_CLINICAL_ASSESSMENTS: ClinicalAssessmentRecord[] = [
+  {
+    id: 'ass-1',
+    clientId: 'cli-101',
+    clientName: 'Jordan Miller',
+    practitionerId: 'prac-1',
+    practitionerName: 'Dr. Sarah Jenkins',
+    assessmentTool: 'Vineland-3',
+    assessmentDate: '2026-06-15',
+    domainScores: [
+      { domainName: 'Communication', rawScore: 68, standardScore: 62, percentileRank: 1, adaptiveLevel: 'Extremely Low' },
+      { domainName: 'Daily Living Skills', rawScore: 84, standardScore: 71, percentileRank: 3, adaptiveLevel: 'Moderately Low' },
+      { domainName: 'Socialization', rawScore: 55, standardScore: 58, percentileRank: 0.3, adaptiveLevel: 'Extremely Low' },
+      { domainName: 'Motor Skills', rawScore: 92, standardScore: 88, percentileRank: 21, adaptiveLevel: 'Adequate' },
+    ],
+    clinicalInterpretation: 'Jordan demonstrates marked strengths in gross motor physical activities while experiencing clinically significant challenges in functional receptive and expressive communication. Receptive sensory overload directly impacts social participation in group community settings.',
+    recommendations: [
+      'Implement structured visual schedules with high-contrast icon sequencing.',
+      'Provide noise-cancelling acoustic headsets during high-stimulus community access.',
+      'Train support team in PECS/AAC augmentative communication replacement prompts.'
+    ],
+    status: 'COMPLETED',
+  },
+  {
+    id: 'ass-2',
+    clientId: 'cli-102',
+    clientName: 'Chloe Taylor',
+    practitionerId: 'prac-2',
+    practitionerName: 'Marcus Vance',
+    assessmentTool: 'Sensory Profile 2',
+    assessmentDate: '2026-07-02',
+    domainScores: [
+      { domainName: 'Auditory Processing', rawScore: 38, standardScore: 32, adaptiveLevel: 'High' },
+      { domainName: 'Visual Processing', rawScore: 24, standardScore: 20, adaptiveLevel: 'Adequate' },
+      { domainName: 'Touch / Tactile', rawScore: 42, standardScore: 36, adaptiveLevel: 'High' },
+      { domainName: 'Vestibular & Proprioception', rawScore: 29, standardScore: 25, adaptiveLevel: 'Adequate' },
+    ],
+    clinicalInterpretation: 'Sensory Profile 2 demonstrates Sensory Avoiding patterns in Auditory and Tactile quadrants. Sudden loud noises and unexpected physical contact precipitate rapid autonomic nervous system hyperarousal.',
+    recommendations: [
+      'Introduce scheduled heavy work proprioceptive breaks every 90 minutes.',
+      'Establish quiet retreat sensory nook with dimmed lighting and weighted blankets.',
+      'Provide 5-minute pre-warning countdowns before noisy acoustic transitions.'
+    ],
+    status: 'COMPLETED',
+  },
+];
+
+export const DEFAULT_PRACTICE_BRANDING: PracticeBrandingConfig = {
+  practiceName: 'Breakthrough Coaching & Behaviour Support',
+  ndisRegistrationNumber: '405001234',
+  abn: '48 123 456 789',
+  address: 'Suite 402, 120 Collins Street, Melbourne VIC 3000',
+  phone: '1300 000 279',
+  email: 'admin@breakthrough.org.au',
+  website: 'https://breakthrough.org.au',
+  primaryColorHex: '#0d9488',
+  accentColorHex: '#059669',
+  reportHeaderNotice: 'CONFIDENTIAL NDIS ALLIED HEALTH CLINICAL RECORD — PROTECTED UNDER PRIVACY ACT 1988 & NDIS ACT 2013',
+  reportFooterDisclaimer: 'Breakthrough Coaching & Behaviour Support is a Registered NDIS Provider (Registration ID: 405001234). All Positive Behaviour Support Plans and Restrictive Practice audits comply strictly with NDIS Quality and Safeguards Commission Rules 2018.',
+};
+
 

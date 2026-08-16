@@ -370,3 +370,51 @@ export interface PRODABatch {
   rejectionNotes?: string;
 }
 
+export interface ClinicalAssessmentRecord {
+  id: string;
+  clientId: string;
+  clientName: string;
+  practitionerId: string;
+  practitionerName: string;
+  assessmentTool: 'Vineland-3' | 'Sensory Profile 2' | 'VB-MAPP' | 'ABLLS-R' | 'PEDI-CAT' | 'WHODAS 2.0';
+  assessmentDate: string;
+  domainScores: {
+    domainName: string;
+    rawScore: number;
+    standardScore?: number;
+    percentileRank?: number;
+    adaptiveLevel: 'Extremely Low' | 'Low' | 'Moderately Low' | 'Adequate' | 'High' | 'High Adaptive';
+  }[];
+  clinicalInterpretation: string;
+  recommendations: string[];
+  status: 'DRAFT' | 'COMPLETED' | 'PEER_REVIEWED';
+}
+
+export interface PracticeBrandingConfig {
+  practiceName: string;
+  ndisRegistrationNumber: string;
+  abn: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  logoUrl?: string;
+  primaryColorHex: string;
+  accentColorHex: string;
+  reportHeaderNotice: string;
+  reportFooterDisclaimer: string;
+}
+
+export interface NDISCommissionAuditPackage {
+  id: string;
+  generatedAt: string;
+  targetParticipantId: string;
+  targetParticipantName: string;
+  packageScope: 'FULL_EVIDENCE_BUNDLE' | 'RESTRICTIVE_PRACTICES_ONLY' | 'BEHAVIOUR_SUPPORT_ONLY' | 'FINANCIAL_PRODA_ONLY';
+  includedDocumentTypes: string[];
+  overallComplianceGrade: 'A+' | 'A' | 'B' | 'NEEDS_REMEDIATION';
+  packageChecksum: string;
+  compiledMarkdown: string;
+}
+
+

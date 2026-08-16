@@ -43,7 +43,19 @@ import {
 } from 'recharts';
 
 export const ComplianceDashboard: React.FC = () => {
-  const { clients, practitioners, auditLogs, restrictivePractices, incidents, setActiveTab, addAuditLog, addNotification } = useManagementStore();
+  const {
+    clients,
+    practitioners,
+    auditLogs,
+    restrictivePractices,
+    incidents,
+    practiceBranding,
+    updatePracticeBranding,
+    generateCommissionAuditPackage,
+    setActiveTab,
+    addAuditLog,
+    addNotification
+  } = useManagementStore();
 
   // AI Policy Compliance Tool State
   const [selectedAuditClient, setSelectedAuditClient] = useState(clients[0]?.id || 'cli-101');
@@ -52,6 +64,10 @@ export const ComplianceDashboard: React.FC = () => {
     'Participant receiving PBS and Allied Health OT supports. Case notes indicate weekly 1:1 sessions, quarterly goal reviews, and emergency restrictive practice authorization with guardian consent.'
   );
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isAuditPackageModalOpen, setIsAuditPackageModalOpen] = useState(false);
+  const [isBrandingModalOpen, setIsBrandingModalOpen] = useState(false);
+  const [activeAuditPackage, setActiveAuditPackage] = useState<any>(null);
+  const [brandingForm, setBrandingForm] = useState(practiceBranding);
   const [auditResult, setAuditResult] = useState<{
     overallComplianceScore: number;
     riskLevel: string;
@@ -246,9 +262,25 @@ export const ComplianceDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 shrink-0">
-          <Award className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold text-slate-200">NDIS Reg #: 405001234</span>
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <button
+            onClick={() => setIsBrandingModalOpen(true)}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center gap-1.5 border border-slate-700 transition-all"
+          >
+            <Award className="w-4 h-4 text-amber-400" />
+            <span>Practice Letterhead</span>
+          </button>
+          <button
+            onClick={() => {
+              const pkg = generateCommissionAuditPackage(selectedAuditClient);
+              setActiveAuditPackage(pkg);
+              setIsAuditPackageModalOpen(true);
+            }}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+          >
+            <FileCheck className="w-4 h-4" />
+            <span>Compile NDIS Audit Bundle</span>
+          </button>
         </div>
       </div>
 
@@ -808,6 +840,183 @@ export const ComplianceDashboard: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Audit Package Bundle Modal */}
+      {isAuditPackageModalOpen && activeAuditPackage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl animate-scaleIn max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                  <FileCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    NDIS Quality Commission Evidence Bundle ({activeAuditPackage.targetParticipantName})
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    Integrity Hash: {activeAuditPackage.packageChecksum} | Grade: {activeAuditPackage.overallComplianceGrade}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAuditPackageModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 text-xs pr-1">
+              <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl space-y-1">
+                <span className="font-bold text-emerald-300">Verified Evidence Categories:</span>
+                <ul className="list-disc list-inside text-slate-300 space-y-0.5 text-[11px]">
+                  {activeAuditPackage.includedDocumentTypes.map((d: string, i: number) => (
+                    <li key={i}>{d}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 whitespace-pre-wrap max-h-72 overflow-y-auto">
+                {activeAuditPackage.compiledMarkdown}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <span className="text-[11px] text-slate-400">
+                Ready for submission to NDIS Lead Auditor or Senior Practitioner
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const blob = new Blob([activeAuditPackage.compiledMarkdown], { type: 'text/markdown;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `NDIS_Commission_Audit_Bundle_${activeAuditPackage.targetParticipantName.replace(/\s+/g, '_')}_2026.md`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Full Audit Bundle (.md)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Practice Letterhead & Branding Modal */}
+      {isBrandingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl animate-scaleIn">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-lg">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Practice Letterhead & NDIS Clinical Branding
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Customise official report headers, registration details, and disclaimers
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsBrandingModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Practice / Provider Trading Name</label>
+                <input
+                  type="text"
+                  value={brandingForm.practiceName}
+                  onChange={(e) => setBrandingForm({ ...brandingForm, practiceName: e.target.value })}
+                  className="clinical-input"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">NDIS Provider Registration #</label>
+                  <input
+                    type="text"
+                    value={brandingForm.ndisRegistrationNumber}
+                    onChange={(e) => setBrandingForm({ ...brandingForm, ndisRegistrationNumber: e.target.value })}
+                    className="clinical-input font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">ABN</label>
+                  <input
+                    type="text"
+                    value={brandingForm.abn}
+                    onChange={(e) => setBrandingForm({ ...brandingForm, abn: e.target.value })}
+                    className="clinical-input font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Practice Address</label>
+                <input
+                  type="text"
+                  value={brandingForm.address}
+                  onChange={(e) => setBrandingForm({ ...brandingForm, address: e.target.value })}
+                  className="clinical-input"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Report Header Notice</label>
+                <textarea
+                  rows={2}
+                  value={brandingForm.reportHeaderNotice}
+                  onChange={(e) => setBrandingForm({ ...brandingForm, reportHeaderNotice: e.target.value })}
+                  className="clinical-textarea"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsBrandingModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updatePracticeBranding(brandingForm);
+                  setIsBrandingModalOpen(false);
+                  addNotification({
+                    title: 'Practice Branding Updated',
+                    message: `Report letterhead configured for ${brandingForm.practiceName}.`,
+                    type: 'compliance',
+                    severity: 'info',
+                    linkTab: 'audit',
+                  });
+                }}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-md"
+              >
+                Save Letterhead Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
