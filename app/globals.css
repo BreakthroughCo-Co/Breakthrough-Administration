@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-border: var(--color-slate-800);
+}
+
+/* ─── Clinical Module Animations ─────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+.animate-fadeIn  { animation: fadeIn  0.22s ease-out both; }
+.animate-slideUp { animation: slideUp 0.28s ease-out both; }
+.animate-scaleIn { animation: scaleIn 0.18s ease-out both; }
+
+/* ─── Shared Form Input Styling ─────────────────────────────────────── */
+.clinical-input {
+  width: 100%;
+  background-color: rgb(2 6 23); /* slate-950 */
+  border: 1px solid rgb(30 41 59); /* slate-800 */
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: white;
+  font-size: 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.clinical-input:focus {
+  border-color: rgb(20 184 166); /* teal-500 */
+  box-shadow: 0 0 0 2px rgb(20 184 166 / 0.12);
+}
+.clinical-textarea {
+  width: 100%;
+  background-color: rgb(2 6 23);
+  border: 1px solid rgb(30 41 59);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  color: white;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.clinical-textarea:focus {
+  border-color: rgb(20 184 166);
+  box-shadow: 0 0 0 2px rgb(20 184 166 / 0.12);
+}
+
+/* ─── Heatmap cell hover enhancement ───────────────────────────────── */
+.heatmap-cell {
+  transition: transform 0.12s ease, filter 0.12s ease;
+  cursor: default;
+}
+.heatmap-cell:hover {
+  transform: scale(1.12);
+  filter: brightness(1.25);
+  z-index: 10;
+  position: relative;
+}
+
+/* ─── Scrollbar polish for dark modals ─────────────────────────────── */
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll::-webkit-scrollbar-thumb {
+  background-color: rgb(51 65 85 / 0.7);
+  border-radius: 999px;
+}
+
+/* ─── GAS tier hover interactivity ─────────────────────────────────── */
+.gas-tier {
+  cursor: pointer;
+  transition: transform 0.14s ease, background-color 0.14s ease;
+}
+.gas-tier:hover {
+  transform: scale(1.04);
+}
+
+/* ─── Print styles ─────────────────────────────────────────────────── */
+@media print {
+  body > *:not(#print-target) { display: none !important; }
+  #print-target { display: block !important; }
+}
