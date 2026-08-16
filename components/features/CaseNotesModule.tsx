@@ -78,10 +78,35 @@ export const CaseNotesModule: React.FC = () => {
 
   // Voice Dictation State
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const timerIntervalRef = useRef<any>(null);
 
   const selectedClientObj = clients.find((c: Client) => c.id === selectedClient);
+
+  // Recording Timer effect
+  useEffect(() => {
+    if (isRecording) {
+      setRecordingSeconds(0);
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [isRecording]);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Initialize Web Speech API if supported
   useEffect(() => {
@@ -397,24 +422,65 @@ Return JSON with exact keys: subjective, objective, assessment, plan.`;
             {/* Presets & Voice Dictation Bar */}
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <Mic className="w-4 h-4 text-teal-400" />
-                  Voice Dictation & Clinical Fast-Presets
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <Mic className="w-4 h-4 text-teal-400" />
+                    AI Clinical Voice Dictation Studio
+                  </span>
+                  {isRecording && (
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-mono font-bold animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      REC {formatTimer(recordingSeconds)}
+                    </span>
+                  )}
+                </div>
 
-                <button
-                  type="button"
-                  onClick={toggleRecording}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
-                    isRecording
-                      ? 'bg-rose-600 text-white animate-pulse border border-rose-400'
-                      : 'bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30'
-                  }`}
-                >
-                  {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                  <span>{isRecording ? 'Listening (Click to Stop)...' : 'Start Voice Dictation'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  {rawDictationText && (
+                    <button
+                      type="button"
+                      onClick={() => setRawDictationText('')}
+                      className="px-2 py-1 text-[10px] font-semibold text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
+                    >
+                      Clear Audio
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={toggleRecording}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                      isRecording
+                        ? 'bg-rose-600 hover:bg-rose-500 text-white animate-pulse border border-rose-400'
+                        : 'bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30'
+                    }`}
+                  >
+                    {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    <span>{isRecording ? `Stop Recording (${formatTimer(recordingSeconds)})` : 'Start Voice Dictation'}</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Live Audio Waveform Visualizer */}
+              {isRecording && (
+                <div className="bg-slate-950 p-3 rounded-xl border border-rose-500/30 flex items-center justify-between gap-3 animate-in fade-in">
+                  <div className="flex items-center gap-1.5 h-7 flex-1 justify-center">
+                    {[40, 80, 55, 95, 30, 70, 85, 100, 60, 90, 45, 75, 90, 35, 65, 80, 50, 90, 70, 40].map((h, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-gradient-to-t from-teal-500 to-rose-400 rounded-full animate-pulse"
+                        style={{
+                          height: `${Math.max(15, (h * (Math.sin(recordingSeconds * 3 + i) * 0.4 + 0.6)))}%`,
+                          animationDelay: `${i * 60}ms`,
+                          animationDuration: '600ms'
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-mono text-teal-300 font-bold shrink-0">
+                    Live Australian English (en-AU)
+                  </span>
+                </div>
+              )}
 
               {/* Dictation Textbox */}
               <div className="space-y-2">

@@ -23,9 +23,11 @@ import {
   Globe,
   LogIn,
   Building2,
-  RefreshCw
+  RefreshCw,
+  Rocket
 } from 'lucide-react';
 import { signInWithGoogle, getCachedAccessToken, auth } from '@/lib/firebase';
+import { PhasedRolloutModal } from '@/components/PhasedRolloutModal';
 
 export const Header: React.FC = () => {
   const {
@@ -50,6 +52,7 @@ export const Header: React.FC = () => {
   } = useManagementStore();
 
   const [showNotifPopover, setShowNotifPopover] = useState(false);
+  const [isRolloutModalOpen, setIsRolloutModalOpen] = useState(false);
 
   const unreadCount = notifications.filter((n: AppNotification) => !n.read).length;
 
@@ -61,25 +64,32 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-slate-100 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-md">
-      {/* Brand & Organization */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-md text-white font-black flex items-center justify-center">
-          <Activity className="w-5 h-5" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-extrabold tracking-tight text-white">
-              Breakthrough OS
-            </h1>
-            <span className="text-[10px] bg-teal-500/10 text-teal-400 font-mono px-2 py-0.5 rounded border border-teal-500/20 font-semibold">
-              NDIS Clinical Allied Health
-            </span>
-            <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="Live bidirectional sync active with Firebase Firestore database">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <Database className="w-3 h-3 text-emerald-400" />
-              <span>Firestore Synced</span>
-            </div>
+    <>
+      <header className="bg-slate-900 border-b border-slate-800 text-slate-100 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-md">
+        {/* Brand & Organization */}
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-md text-white font-black flex items-center justify-center">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-extrabold tracking-tight text-white">
+                Breakthrough OS
+              </h1>
+              <button
+                onClick={() => setIsRolloutModalOpen(true)}
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 transition-all cursor-pointer shadow-sm group"
+                title="View Breakthrough OS Multi-Phase Product Rollout Schedule"
+              >
+                <Rocket className="w-3 h-3 text-teal-400 group-hover:scale-110 transition-transform" />
+                <span className="font-mono">Stage 1 Live</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </button>
+              <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="Live bidirectional sync active with Firebase Firestore database">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <Database className="w-3 h-3 text-emerald-400" />
+                <span>Firestore Synced</span>
+              </div>
 
             {/* Offline Status & Sync Trigger */}
             {isOffline ? (
@@ -307,5 +317,7 @@ export const Header: React.FC = () => {
         </div>
       </div>
     </header>
+    <PhasedRolloutModal isOpen={isRolloutModalOpen} onClose={() => setIsRolloutModalOpen(false)} />
+  </>
   );
 };

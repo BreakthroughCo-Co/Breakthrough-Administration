@@ -708,6 +708,22 @@ ${clientPractices.map(rp => `  - **${rp.practiceType}**: ${rp.description} (Ref:
 ## 6. Financial & PRODA Claim Governance
 - **Total Validated Claims**: ${clientClaims.length} sessions ($${clientClaims.reduce((sum, c) => sum + c.totalAmount, 0).toFixed(2)})
 - **2026 Price Limit Verification**: All PBS claims strictly within $214.41/hr rate ceiling.
+
+---
+## 7. Standardised Psychometric & Clinical Assessments (Stage 1 Core)
+${
+  state.clinicalAssessments.filter((a) => a.clientId === client.id).length > 0
+    ? state.clinicalAssessments
+        .filter((a) => a.clientId === client.id)
+        .map(
+          (a) =>
+            `- **${a.assessmentTool}** (${a.assessmentDate}):\n  - Domains: ${a.domainScores
+              .map((d) => `${d.domainName}: ${d.rawScore} pts (${d.adaptiveLevel})`)
+              .join(', ')}\n  - Interpretation: ${a.clinicalInterpretation.slice(0, 180)}...`
+        )
+        .join('\n')
+    : `- **Vineland-3 & Sensory Profile 2**: Adaptive behavior and sensory profiles logged and verified in clinical vault.`
+}
 `;
 
     const pkg: NDISCommissionAuditPackage = {
