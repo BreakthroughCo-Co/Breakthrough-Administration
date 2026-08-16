@@ -83,14 +83,24 @@
 /* ─── GAS tier hover interactivity ─────────────────────────────────── */
 .gas-tier {
   cursor: pointer;
-  transition: transform 0.14s ease, background-color 0.14s ease;
+  transition: transform 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
 }
 .gas-tier:hover {
   transform: scale(1.04);
 }
+.gas-tier:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+/* ─── Compliance score badge glow ───────────────────────────────────── */
+.compliance-badge-green { box-shadow: 0 0 12px 0 rgb(52 211 153 / 0.15); }
+.compliance-badge-amber { box-shadow: 0 0 12px 0 rgb(251 191 36 / 0.15); }
+.compliance-badge-red   { box-shadow: 0 0 12px 0 rgb(248 113 113 / 0.15); }
 
 /* ─── Print styles ─────────────────────────────────────────────────── */
 @media print {
   body > *:not(#print-target) { display: none !important; }
   #print-target { display: block !important; }
 }
+

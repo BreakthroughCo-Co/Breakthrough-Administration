@@ -252,14 +252,17 @@ Return a valid JSON object with:
   const handleSelectGasScore = (goalId: string, newScore: number) => {
     const goal = selectedClient?.goals.find((g) => g.id === goalId);
     if (!goal || !selectedClient) return;
-    const progressMap: Record<number, number> = {
-      [-2]: 20,
-      [-1]: 45,
-      [0]: 70,
-      [1]: 85,
-      [2]: 100,
+    const getProgressFromScore = (score: number): number => {
+      switch (score) {
+        case -2: return 20;
+        case -1: return 45;
+        case 0:  return 70;
+        case 1:  return 85;
+        case 2:  return 100;
+        default: return goal.progressPercent;
+      }
     };
-    const newProgress = progressMap[newScore] ?? goal.progressPercent;
+    const newProgress = getProgressFromScore(newScore);
     const today = new Date().toISOString().slice(0, 10);
     const updatedHistory = [
       ...(goal.gasHistory || []),
@@ -279,7 +282,7 @@ Return a valid JSON object with:
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-slideUp">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
         <div className="flex items-start gap-3.5">

@@ -511,7 +511,7 @@ Provide a strictly valid JSON object with the following schema:
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slideUp">
       {/* Header Banner */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
         <div className="flex items-start gap-3.5">
@@ -600,7 +600,9 @@ Provide a strictly valid JSON object with the following schema:
         </div>
 
         {/* Real-time Compliance Auditor */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+        <div className={`bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between ${
+          auditResult.score >= 90 ? 'compliance-badge-green' : auditResult.score >= 70 ? 'compliance-badge-amber' : 'compliance-badge-red'
+        }`}>
           <div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
               NDIS Commission Compliance Score
@@ -629,8 +631,10 @@ Provide a strictly valid JSON object with the following schema:
               Evaluated against NDIS Quality & Safeguards PBS Capability Framework 2026.
             </p>
           </div>
-          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-teal-400 shrink-0">
-            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 shrink-0">
+            {auditResult.score >= 70
+              ? <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+              : <AlertTriangle className="w-7 h-7 text-rose-400" />}
           </div>
         </div>
 

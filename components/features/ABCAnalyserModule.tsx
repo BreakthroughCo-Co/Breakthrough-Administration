@@ -205,7 +205,7 @@ Synthesize a precise 3-part Functional Behaviour Assessment (FBA) Hypothesis sta
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slideUp">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
         <div className="flex items-start gap-3.5">
@@ -498,7 +498,12 @@ Synthesize a precise 3-part Functional Behaviour Assessment (FBA) Hypothesis sta
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {displayedLogs.map((log: ABCLog) => (
+          {displayedLogs.length === 0 ? (
+            <div className="col-span-2 py-12 bg-slate-950/40 rounded-xl border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+              No ABC observation logs found for this participant with the selected filter. Click &quot;Log ABC Observation&quot; to add the first entry.
+            </div>
+          ) : (
+            displayedLogs.map((log: ABCLog) => (
             <div
               key={log.id}
               className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3.5 shadow-sm hover:border-slate-700 transition-all"
@@ -567,7 +572,7 @@ Synthesize a precise 3-part Functional Behaviour Assessment (FBA) Hypothesis sta
                 <span>Duration: {log.durationMinutes} mins</span>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

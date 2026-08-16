@@ -177,7 +177,7 @@ export const RestrictivePracticesModule: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slideUp">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
         <div className="flex items-start gap-3.5">
@@ -279,7 +279,11 @@ export const RestrictivePracticesModule: React.FC = () => {
       {/* Tab 1: Active Authorizations Grid */}
       {activeTab === 'authorizations' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredPractices.map((practice: RestrictivePractice) => {
+          {filteredPractices.length === 0 ? (
+            <div className="col-span-2 py-12 bg-slate-950/40 rounded-xl border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+              No restrictive practice authorizations registered for the selected participant. Click &quot;Register New Authorization&quot; to add one.
+            </div>
+          ) : filteredPractices.map((practice: RestrictivePractice) => {
             const daysRemaining = getDaysRemaining(practice.expiryDate);
             const clientObj = clients.find((c) => c.id === practice.clientId);
 
@@ -400,9 +404,16 @@ export const RestrictivePracticesModule: React.FC = () => {
                     </td>
                     <td className="p-3 text-[11px]">
                       <div>{log.staffPresent.join(', ')}</div>
-                      <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
-                        <Check className="w-3 h-3" /> Debrief Logged
-                      </div>
+                      {log.debriefCompleted && (
+                        <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                          <Check className="w-3 h-3" /> Debrief Logged
+                        </div>
+                      )}
+                      {!log.debriefCompleted && (
+                        <div className="flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                          <AlertTriangle className="w-3 h-3" /> Debrief Pending
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
