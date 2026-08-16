@@ -104,6 +104,19 @@ export const Header: React.FC = () => {
           <Search className="w-4 h-4 text-teal-400" />
         </button>
 
+        {/* AI Copilot Omni-Drawer Launcher */}
+        <button
+          onClick={useManagementStore.getState().toggleAICopilot}
+          className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-teal-500/15 via-indigo-500/15 to-teal-500/15 hover:from-teal-500/25 hover:to-indigo-500/25 border border-teal-500/30 hover:border-teal-400/50 rounded-xl text-teal-300 hover:text-white transition-all shadow-sm group"
+          title="Open AI Clinical & Operations Copilot (Ctrl+J)"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-teal-400 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
+          <span className="text-xs font-bold hidden sm:inline">AI Copilot</span>
+          <kbd className="hidden md:inline-block text-[9px] font-mono bg-teal-950 text-teal-300 px-1.5 py-0.2 rounded border border-teal-500/30">
+            Ctrl+J
+          </kbd>
+        </button>
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}

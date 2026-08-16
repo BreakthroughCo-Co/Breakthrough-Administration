@@ -5,6 +5,7 @@ import { useManagementStore } from '@/stores/useManagementStore';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { CommandPalette } from '@/components/CommandPalette';
+import { AICopilotDrawer } from '@/components/AICopilotDrawer';
 import { CommandCenter } from '@/components/features/CommandCenter';
 import { ClientsModule } from '@/components/features/ClientsModule';
 import { CaseNotesModule } from '@/components/features/CaseNotesModule';
@@ -23,7 +24,19 @@ import { AuditLogsModule } from '@/components/features/AuditLogsModule';
 import { IntegrationsModule } from '@/components/features/IntegrationsModule';
 
 export default function Page() {
-  const { activeTab, setActiveTab, theme } = useManagementStore();
+  const { activeTab, setActiveTab, theme, toggleAICopilot } = useManagementStore();
+
+  // Global hotkey listeners: Ctrl+J for Copilot
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        toggleAICopilot();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleAICopilot]);
 
   return (
     <div
@@ -57,6 +70,8 @@ export default function Page() {
         </main>
       </div>
       <CommandPalette />
+      <AICopilotDrawer />
     </div>
   );
 }
+

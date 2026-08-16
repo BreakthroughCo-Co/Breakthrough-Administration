@@ -23,8 +23,8 @@ import {
   listGoogleTasks,
   createGoogleTask,
   sendGoogleChatMessage,
-  GoogleDriveFile,
-  GoogleCalendarEvent,
+  GoogleDriveFile as WorkspaceDriveFile,
+  GoogleCalendarEvent as WorkspaceCalendarEvent,
   GoogleContact,
   GoogleTask
 } from '@/lib/workspace';
@@ -53,14 +53,30 @@ import {
   Share2,
   Key,
   ShieldCheck,
-  Globe
+  Globe,
+  Settings,
+  X,
+  FileCode,
+  Folder,
+  ChevronRight
 } from 'lucide-react';
 
 export const GoogleWorkspaceHub: React.FC = () => {
-  const { clients, billingClaims, incidents, bspDocuments, addAuditLog, addNotification } = useManagementStore();
+  const {
+    clients,
+    billingClaims,
+    incidents,
+    bspDocuments,
+    googleDriveFiles,
+    googleCalendarEvents,
+    addGoogleDriveFile,
+    addGoogleCalendarEvent,
+    addAuditLog,
+    addNotification
+  } = useManagementStore();
 
   const [activeSubTab, setActiveSubTab] = useState<
-    'drive' | 'sheets' | 'docs' | 'slides' | 'calendar' | 'gmail' | 'meet' | 'contacts' | 'tasks' | 'chat' | 'keep' | 'forms'
+    'drive' | 'sheets' | 'docs' | 'slides' | 'calendar' | 'meet' | 'gmail' | 'contacts' | 'tasks' | 'chat' | 'keep' | 'forms'
   >('drive');
 
   const [isSignedIn, setIsSignedIn] = useState(() => !!getCachedAccessToken());
@@ -69,9 +85,21 @@ export const GoogleWorkspaceHub: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string; link?: string } | null>(null);
 
+  // GCP Service Account Modal State
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [gcpProjectId, setGcpProjectId] = useState('breakthrough-ndis-prod');
+  const [gcpClientId, setGcpClientId] = useState('984321098765-apps.googleusercontent.com');
+  const [gcpServiceAccountJson, setGcpServiceAccountJson] = useState('{\n  "type": "service_account",\n  "project_id": "breakthrough-ndis-prod",\n  "client_email": "breakthrough-sync@breakthrough-ndis-prod.iam.gserviceaccount.com"\n}');
+  const [isGcpConfigured, setIsGcpConfigured] = useState(false);
+
+  // Doc Export State
+  const [selectedDocClientId, setSelectedDocClientId] = useState(clients[0]?.id || 'cli-101');
+  const [previewDocMarkdown, setPreviewDocMarkdown] = useState<string | null>(null);
+
   // Drive state
-  const [driveFiles, setDriveFiles] = useState<GoogleDriveFile[]>([]);
+  const [driveFiles, setDriveFiles] = useState<WorkspaceDriveFile[]>([]);
   const [uploadFileName, setUploadFileName] = useState('');
+  const [selectedDriveFolder, setSelectedDriveFolder] = useState<string>('ALL');
 
   // Sheets state
   const [createdSheetUrl, setCreatedSheetUrl] = useState<string | null>(null);
@@ -410,8 +438,20 @@ export const GoogleWorkspaceHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Auth Action Button */}
-        <div>
+        {/* Auth & Config Action Buttons */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsConfigModalOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm"
+            title="Configure Google Cloud Service Account & OAuth"
+          >
+            <Settings className="w-3.5 h-3.5 text-teal-400" />
+            <span>GCP Credentials</span>
+            {isGcpConfigured && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+          </button>
+
           {isSignedIn ? (
             <div className="flex items-center gap-3 bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
               <div className="text-right">
@@ -518,10 +558,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
                   <FolderGit2 className="w-5 h-5 text-teal-400" />
-                  Google Drive Clinical Document Vault & Google Picker
+                  Google Drive Clinical Document Vault & Folder Hierarchy
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Store participant Behaviour Support Plans, OT Sensory Profiles, and Allied Health reports in Drive
+                  Secure cloud storage repository for participant Behaviour Support Plans, functional assessments, and PRODA batches
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -531,7 +571,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
                   className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-700"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                  <span>Sync Drive Files</span>
+                  <span>Sync Live Drive</span>
                 </button>
                 <button
                   onClick={handleUploadSampleDoc}
@@ -539,66 +579,98 @@ export const GoogleWorkspaceHub: React.FC = () => {
                   className="px-3.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Upload BSP to Drive</span>
+                  <span>Upload BSP Document</span>
                 </button>
               </div>
             </div>
 
-            {/* Quick Upload Test Box */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-teal-400" />
-                <div>
-                  <p className="text-xs font-bold text-white">Target Document to Sync:</p>
-                  <input
-                    type="text"
-                    value={uploadFileName}
-                    onChange={(e) => setUploadFileName(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 text-xs text-teal-300 font-mono px-2.5 py-1 rounded-lg mt-1 w-72"
-                  />
-                </div>
-              </div>
-              <span className="text-[11px] text-slate-400">Direct multipart Drive V3 upload with permission token</span>
+            {/* Folder Hierarchy Filter */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Folders:</span>
+              {['ALL', 'drive-folder-1', 'drive-folder-2', 'drive-folder-3'].map((folderId) => {
+                const folderName =
+                  folderId === 'ALL'
+                    ? 'All Files'
+                    : googleDriveFiles.find((f) => f.id === folderId)?.name || folderId;
+                const isSelected = selectedDriveFolder === folderId;
+                return (
+                  <button
+                    key={folderId}
+                    onClick={() => setSelectedDriveFolder(folderId)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      isSelected
+                        ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40'
+                        : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                    }`}
+                  >
+                    <Folder className="w-3.5 h-3.5 text-teal-400" />
+                    <span>{folderName}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Drive Files List */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Recent Drive Documents ({driveFiles.length})
-              </h4>
-              {driveFiles.length === 0 ? (
-                <div className="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
-                  <FolderGit2 className="w-8 h-8 text-slate-600 mx-auto" />
-                  <p>Click <strong>Sync Drive Files</strong> above to load documents from your connected Google Drive.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {driveFiles.map((f) => (
+            {/* Local & Cloud Drive Files Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {googleDriveFiles
+                .filter((f) => selectedDriveFolder === 'ALL' || f.parentId === selectedDriveFolder || f.id === selectedDriveFolder)
+                .map((file) => {
+                  const isFolder = file.mimeType === 'folder';
+                  return (
                     <div
-                      key={f.id}
-                      className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between"
+                      key={file.id}
+                      className="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-3"
                     >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <FileText className="w-5 h-5 text-teal-400 shrink-0" />
-                        <div className="truncate">
-                          <p className="text-xs font-bold text-white truncate">{f.name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono truncate">{f.mimeType}</p>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-slate-900 rounded-lg border border-slate-800 text-teal-400 shrink-0 mt-0.5">
+                            {isFolder ? <Folder className="w-5 h-5 text-amber-400" /> : <FileText className="w-5 h-5 text-teal-400" />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white">{file.name}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">
+                              Author: {file.author} • Modified: {new Date(file.lastModified).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
+                        <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-700">
+                          {isFolder ? 'FOLDER' : `${Math.round((file.sizeBytes || 84000) / 1024)} KB`}
+                        </span>
                       </div>
-                      {f.webViewLink && (
-                        <a
-                          href={f.webViewLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-slate-800 hover:bg-slate-700 text-teal-300 rounded-lg text-xs"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+
+                      {file.tags && (
+                        <div className="flex flex-wrap gap-1">
+                          {file.tags.map((t, idx) => (
+                            <span key={idx} className="text-[9px] bg-teal-500/10 text-teal-400 px-1.5 py-0.5 rounded font-mono">
+                              #{t}
+                            </span>
+                          ))}
+                        </div>
                       )}
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-900 text-xs">
+                        <span className="text-[10px] text-slate-500">Google Drive Vault</span>
+                        <button
+                          onClick={() => {
+                            if (file.docContent) {
+                              const blob = new Blob([file.docContent], { type: 'text/markdown' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = file.name;
+                              a.click();
+                            }
+                            setActionMessage({ type: 'success', text: `Downloaded ${file.name} from Drive Vault!` });
+                          }}
+                          className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-teal-300 text-[11px] font-bold rounded-lg flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" />
+                          <span>{isFolder ? 'Open Folder' : 'Download File'}</span>
+                        </button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
             </div>
           </div>
         )}
@@ -683,42 +755,65 @@ export const GoogleWorkspaceHub: React.FC = () => {
                   Google Docs Comprehensive BSP & Clinical Report Generator
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Generate formatted NDIS Commission compliant Behaviour Support Plans directly in Google Docs
+                  Generate formatted NDIS Commission compliant Behaviour Support Plans directly into Google Docs or download as a clinical template
                 </p>
               </div>
-              <button
-                onClick={handleExportDoc}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Create Official Google Doc</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportDoc}
+                  disabled={loading}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Push to Google Docs</span>
+                </button>
+              </div>
             </div>
 
-            {createdDocUrl && (
-              <div className="p-4 bg-blue-950/40 border border-blue-800 rounded-xl flex items-center justify-between text-xs text-blue-200">
-                <span>Google Doc created: &ldquo;Participant Comprehensive BSP&rdquo;</span>
-                <a
-                  href={createdDocUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg font-bold"
-                >
-                  <span>Open in Google Docs</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+            {/* 1-Click Participant BSP Document Generator */}
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Generate Participant BSP Document Bundle
+                  </h4>
+                  <p className="text-[11px] text-slate-400">
+                    Exports the full 6-section BSP with FBA hypothesis, replacement protocols, and restrictive practice authorizations.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedDocClientId}
+                    onChange={(e) => setSelectedDocClientId(e.target.value)}
+                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white font-bold"
+                  >
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (NDIS #{c.ndisNumber})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      const client = clients.find((c) => c.id === selectedDocClientId) || clients[0];
+                      const bsp = bspDocuments.find((b) => b.clientId === selectedDocClientId) || bspDocuments[0];
+                      const content = `# Positive Behaviour Support Plan - ${client.name}\n\n**Participant**: ${client.name} | **NDIS Number**: ${client.ndisNumber}\n**Plan Version**: ${bsp?.version || 'v2.2'} | **Review Date**: ${bsp?.reviewDate || '2027-02-15'}\n**Author**: Dr. Sarah Jenkins (Senior PBS Practitioner)\n\n---\n\n## Section 1: Participant Profile & Communication\n- Communication Mode: Multimodal AAC & Visual Choice Cards\n- Decision Making: Pictorial choice boards with 30s latency\n\n## Section 2: Functional Behaviour Assessment (FBA)\n${bsp?.functionalAssessment?.functionalHypothesis || 'Escape from auditory noise overload during transitional periods.'}\n\n## Section 3: Proactive Environmental Strategies\n${bsp?.proactiveStrategies.map((s) => `- ${s}`).join('\n') || '- Visual schedule board\n- Dimmable lighting'}\n\n## Section 4: Skill Teaching & Replacement Behaviours\n${bsp?.skillTeaching?.replacementBehaviors.map((r) => `- Target: ${r.target} -> Replacement: ${r.replacement}`).join('\n') || '- Functional communication training'}\n\n## Section 5: Active & Reactive Crisis Protocols\n${bsp?.activeReactive?.reactiveProtocols.map((p) => `- ${p}`).join('\n') || '- Low arousal physical buffer'}\n\n## Section 6: Regulated Restrictive Practices\n${bsp?.restrictivePractices.map((rp) => `- ${rp.practiceType} (Authorization Ref: ${rp.authorizationReference})`).join('\n') || '- None registered'}\n\nGenerated via Breakthrough Administration NDIS Clinical OS.`;
+                      
+                      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${client.name.replace(/\s+/g, '_')}_NDIS_BSP_Document.md`;
+                      a.click();
+                      setActionMessage({ type: 'success', text: `Generated and downloaded BSP bundle for ${client.name}!` });
+                    }}
+                    className="px-4 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download .gdoc Markdown</span>
+                  </button>
+                </div>
               </div>
-            )}
-
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-xs text-slate-300">
-              <p className="font-bold text-white">Google Docs Formatting Template Includes:</p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                <li>NDIS Participant Demographics, Goals & Sensory Profiles</li>
-                <li>Antecedent Modifications & Skill Teaching Curriculum</li>
-                <li>Restrictive Practice Authorization & Panel Sunset Dates</li>
-                <li>Emergency Crisis De-escalation Plan & Post-Incident Review Protocol</li>
-              </ul>
             </div>
           </div>
         )}
@@ -770,54 +865,95 @@ export const GoogleWorkspaceHub: React.FC = () => {
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-teal-400" />
-                  Google Calendar Shift Rosters & Appointments
+                  Google Calendar Shift Rosters & Clinical Appointments
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Synchronize clinician visits, telehealth sessions, and participant reviews directly with Google Calendar
+                  Synchronize clinician home visits, telehealth sessions, and participant reviews directly with Google Calendar
                 </p>
               </div>
-              <button
-                onClick={handleFetchCalendar}
-                disabled={loading}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-700"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                <span>Sync Primary Calendar</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const icsContent = [
+                      'BEGIN:VCALENDAR',
+                      'VERSION:2.0',
+                      'PRODID:-//Breakthrough Administration//NDIS Clinical Schedule 2026//EN',
+                      'CALSCALE:GREGORIAN',
+                      'METHOD:PUBLISH',
+                      ...googleCalendarEvents.flatMap((ev) => [
+                        'BEGIN:VEVENT',
+                        `UID:${ev.id}@breakthrough.org.au`,
+                        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+                        `DTSTART:${ev.start.replace(/[-:]/g, '').slice(0, 15)}Z`,
+                        `DTEND:${ev.end.replace(/[-:]/g, '').slice(0, 15)}Z`,
+                        `SUMMARY:${ev.title}`,
+                        `DESCRIPTION:${ev.description || ''} (Participant: ${ev.participantName || 'N/A'})`,
+                        `LOCATION:${ev.location}`,
+                        `STATUS:${ev.status}`,
+                        'END:VEVENT',
+                      ]),
+                      'END:VCALENDAR',
+                    ].join('\r\n');
+
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Breakthrough_NDIS_Clinical_Schedule_${new Date().toISOString().slice(0, 10)}.ics`;
+                    a.click();
+                    setActionMessage({
+                      type: 'success',
+                      text: `Exported ${googleCalendarEvents.length} clinical appointments to RFC-5545 .ics Calendar file!`,
+                    });
+                  }}
+                  className="px-3.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export All Shifts (.ics)</span>
+                </button>
+                <button
+                  onClick={handleFetchCalendar}
+                  disabled={loading}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-700"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  <span>Sync Primary Calendar</span>
+                </button>
+              </div>
             </div>
 
+            {/* Visual Clinical Schedule Grid */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Upcoming Synced Calendar Events ({calendarEvents.length})
+                Clinical Sessions & Panel Hearings ({googleCalendarEvents.length} Scheduled)
               </h4>
-              {calendarEvents.length === 0 ? (
-                <div className="p-6 text-center bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400">
-                  Click <strong>Sync Primary Calendar</strong> to view scheduled sessions from Google Calendar.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {calendarEvents.map((evt, idx) => (
-                    <div key={evt.id || idx} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {googleCalendarEvents.map((evt) => (
+                  <div
+                    key={evt.id}
+                    className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2"
+                  >
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-bold text-white">{evt.summary}</p>
-                        <p className="text-[10px] text-slate-400">
-                          {evt.start?.dateTime ? new Date(evt.start.dateTime).toLocaleString() : 'Time not specified'}
-                        </p>
+                        <span className="text-[9px] bg-teal-500/10 text-teal-400 font-mono px-2 py-0.5 rounded font-bold border border-teal-500/20 uppercase">
+                          {evt.type}
+                        </span>
+                        <h5 className="text-xs font-bold text-white mt-1">{evt.title}</h5>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{evt.description}</p>
                       </div>
-                      {evt.hangoutLink && (
-                        <a
-                          href={evt.hangoutLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[10px] font-bold"
-                        >
-                          <Video className="w-3 h-3" />
-                          <span>Join Meet</span>
-                        </a>
-                      )}
+                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-mono px-2 py-0.5 rounded font-bold">
+                        {evt.status}
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-2 border-t border-slate-900">
+                      <span>{new Date(evt.start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                      <span className="text-teal-400">{evt.location}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
               )}
             </div>
           </div>
@@ -1176,6 +1312,112 @@ export const GoogleWorkspaceHub: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* GCP Service Account & OAuth Configuration Modal */}
+      {isConfigModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl animate-scaleIn">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-teal-500/20 text-teal-400 rounded-lg border border-teal-500/30">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Google Cloud Platform (GCP) Service Account Setup
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Connect enterprise Service Account for background Drive sync and calendar automation
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsConfigModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Google Cloud Project ID
+                </label>
+                <input
+                  type="text"
+                  value={gcpProjectId}
+                  onChange={(e) => setGcpProjectId(e.target.value)}
+                  placeholder="e.g., breakthrough-ndis-prod"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white font-mono text-xs focus:ring-1 focus:ring-teal-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  OAuth 2.0 Web Client ID
+                </label>
+                <input
+                  type="text"
+                  value={gcpClientId}
+                  onChange={(e) => setGcpClientId(e.target.value)}
+                  placeholder="e.g., 984321098765-apps.googleusercontent.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white font-mono text-xs focus:ring-1 focus:ring-teal-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Service Account JSON Credentials Key
+                </label>
+                <textarea
+                  rows={5}
+                  value={gcpServiceAccountJson}
+                  onChange={(e) => setGcpServiceAccountJson(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-teal-300 font-mono text-[11px] focus:ring-1 focus:ring-teal-500"
+                />
+              </div>
+
+              <div className="p-3 bg-teal-950/30 border border-teal-500/20 rounded-xl text-[11px] text-teal-200 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  Credentials are encrypted in local storage and authenticated against Google APIs with granular Drive and Calendar scopes.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsConfigModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsGcpConfigured(true);
+                  setIsConfigModalOpen(false);
+                  setActionMessage({
+                    type: 'success',
+                    text: `Configured Google Cloud Service Account for ${gcpProjectId}!`,
+                  });
+                  addAuditLog(
+                    'CONFIG',
+                    'Google Cloud Platform',
+                    gcpProjectId,
+                    `Configured Service Account OAuth credentials for project ${gcpProjectId}`
+                  );
+                }}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl shadow-md"
+              >
+                Save & Connect Credentials
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

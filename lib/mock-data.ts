@@ -13,7 +13,11 @@ import {
   CommunicationLog,
   NDISSupportItem,
   RestrictivePracticeUsageLog,
-  NDISMonthlyReturnRecord
+  NDISMonthlyReturnRecord,
+  PRODABatch,
+  GoogleDriveFile,
+  GoogleCalendarEvent,
+  AICopilotMessage
 } from '@/types';
 
 export const INITIAL_USERS: UserProfile[] = [
@@ -826,3 +830,159 @@ export const INITIAL_COMMUNICATIONS: CommunicationLog[] = [
     followUpDate: '2026-08-15',
   },
 ];
+
+export const INITIAL_PRODA_BATCHES: PRODABatch[] = [
+  {
+    id: 'batch-2026-08A',
+    batchReference: 'NDIS-B2G-20260810-001',
+    createdAt: '2026-08-10T09:00:00Z',
+    claimCount: 4,
+    totalAmount: 1856.44,
+    status: 'ACCEPTED',
+    submissionDate: '2026-08-10T10:15:00Z',
+    ndiaResponseCode: 'NDIA_PAID_FULL',
+    claimIds: ['clm-1', 'clm-2'],
+  },
+  {
+    id: 'batch-2026-08B',
+    batchReference: 'NDIS-B2G-20260814-002',
+    createdAt: '2026-08-14T14:30:00Z',
+    claimCount: 3,
+    totalAmount: 1147.20,
+    status: 'SCRUBBED_VALID',
+    claimIds: ['clm-3', 'clm-4'],
+  },
+];
+
+export const INITIAL_DRIVE_FILES: GoogleDriveFile[] = [
+  {
+    id: 'drive-folder-1',
+    name: 'NDIS Participants 2026',
+    mimeType: 'folder',
+    parentId: null,
+    lastModified: '2026-08-15T08:00:00Z',
+    author: 'Dr. Sarah Jenkins',
+    tags: ['Clinical', 'Active'],
+  },
+  {
+    id: 'drive-folder-2',
+    name: 'PBS Plans & Quality Commission',
+    mimeType: 'folder',
+    parentId: null,
+    lastModified: '2026-08-14T11:20:00Z',
+    author: 'Marcus Vance',
+    tags: ['PBS', 'Compliance'],
+  },
+  {
+    id: 'drive-folder-3',
+    name: 'PRODA Payment Batches',
+    mimeType: 'folder',
+    parentId: null,
+    lastModified: '2026-08-12T16:00:00Z',
+    author: 'Elena Rostova',
+    tags: ['Billing', 'Finance'],
+  },
+  {
+    id: 'drive-file-1',
+    name: 'Jordan Miller - Comprehensive BSP v2.2.gdoc',
+    mimeType: 'application/vnd.google-apps.document',
+    parentId: 'drive-folder-2',
+    sizeBytes: 148200,
+    lastModified: '2026-08-15T09:45:00Z',
+    author: 'Dr. Sarah Jenkins',
+    tags: ['BSP', 'Jordan Miller', 'v2.2'],
+    docContent: '# Positive Behaviour Support Plan - Jordan Miller (NDIS #430891204)\n\n## Section 1: Participant Profile\nCommunication: Multimodal (AAC + verbal)...\n\n## Section 2: Functional Behaviour Assessment\nPrimary Function: Escape from sensory auditory overload...',
+  },
+  {
+    id: 'drive-file-2',
+    name: 'August 2026 PRODA Claims Batch 001.gsheet',
+    mimeType: 'application/vnd.google-apps.spreadsheet',
+    parentId: 'drive-folder-3',
+    sizeBytes: 89400,
+    lastModified: '2026-08-10T10:15:00Z',
+    author: 'Elena Rostova',
+    tags: ['NDIS-B2G-20260810-001', 'PRODA'],
+  },
+  {
+    id: 'drive-file-3',
+    name: 'Restrictive Practices Monthly Return - July 2026.pdf',
+    mimeType: 'application/pdf',
+    parentId: 'drive-folder-2',
+    sizeBytes: 320000,
+    lastModified: '2026-08-05T12:00:00Z',
+    author: 'Marcus Vance',
+    tags: ['Senior Practitioner', 'State Authorised'],
+  },
+];
+
+export const INITIAL_CALENDAR_EVENTS: GoogleCalendarEvent[] = [
+  {
+    id: 'cal-1',
+    title: 'Lego-Based Therapy Session (Jordan Miller)',
+    start: '2026-08-17T09:30:00',
+    end: '2026-08-17T11:00:00',
+    type: 'SESSION',
+    participantId: 'cli-101',
+    participantName: 'Jordan Miller',
+    practitionerId: 'prac-2',
+    practitionerName: 'Marcus Vance',
+    location: 'Suite 4B, Breakthrough Community Clinic',
+    status: 'CONFIRMED',
+    description: 'Collaborative build focusing on turn taking and receptive communication tokens.',
+  },
+  {
+    id: 'cal-2',
+    title: 'FBA Environmental Assessment (Chloe Taylor)',
+    start: '2026-08-17T13:00:00',
+    end: '2026-08-17T15:00:00',
+    type: 'ASSESSMENT',
+    participantId: 'cli-102',
+    participantName: 'Chloe Taylor',
+    practitionerId: 'prac-1',
+    practitionerName: 'Dr. Sarah Jenkins',
+    location: 'Day Activity Center, Geelong',
+    status: 'CONFIRMED',
+    description: 'Observational ABC data logging during afternoon classroom transit.',
+  },
+  {
+    id: 'cal-3',
+    title: 'Senior Practitioner Restrictive Practice Panel',
+    start: '2026-08-18T10:00:00',
+    end: '2026-08-18T11:30:00',
+    type: 'SUPERVISION',
+    practitionerId: 'prac-1',
+    practitionerName: 'Dr. Sarah Jenkins',
+    location: 'Google Meet Virtual Boardroom',
+    status: 'CONFIRMED',
+    description: 'Monthly state authorization review for environmental boundary fading protocols.',
+  },
+  {
+    id: 'cal-4',
+    title: 'NDIS Plan Review Stakeholder Meeting (Samira Khan)',
+    start: '2026-08-19T14:00:00',
+    end: '2026-08-19T15:30:00',
+    type: 'STAKEHOLDER_MEETING',
+    participantId: 'cli-103',
+    participantName: 'Samira Khan',
+    practitionerId: 'prac-2',
+    practitionerName: 'Marcus Vance',
+    location: 'Participant Residence, Melbourne',
+    status: 'CONFIRMED',
+    description: 'Presenting Year 1 GAS progress metrics and recommended Capacity Building budget.',
+  },
+];
+
+export const INITIAL_COPILOT_MESSAGES: AICopilotMessage[] = [
+  {
+    id: 'copilot-msg-1',
+    role: 'assistant',
+    content: 'Welcome to Breakthrough AI Copilot. I have live context across all 19 clinical, operations, billing, and Google Workspace modules. Ask me to synthesize ABC observational data, audit BSPs for NDIS compliance, scrub PRODA payment batches, or prepare shift schedules.',
+    timestamp: new Date().toISOString(),
+    suggestedActions: [
+      { label: 'Audit BSP Compliance', actionType: 'TRIGGER_AUDIT' },
+      { label: 'Summarize ABC Trends', actionType: 'NAVIGATE', payload: 'abc-analyser' },
+      { label: 'Scrub PRODA Claims Batch', actionType: 'EXPORT_PRODA' },
+    ],
+  },
+];
+

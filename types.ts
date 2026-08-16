@@ -315,3 +315,58 @@ export interface AppNotification {
   read: boolean;
   linkTab?: string;
 }
+
+export interface AICopilotMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  contextModule?: string;
+  contextClientId?: string;
+  suggestedActions?: {
+    label: string;
+    actionType: 'INSERT_NOTE' | 'NAVIGATE' | 'TRIGGER_AUDIT' | 'EXPORT_PRODA' | 'SYNC_DOC';
+    payload?: any;
+  }[];
+}
+
+export interface GoogleDriveFile {
+  id: string;
+  name: string;
+  mimeType: 'folder' | 'application/vnd.google-apps.document' | 'application/vnd.google-apps.spreadsheet' | 'application/pdf';
+  parentId: string | null;
+  sizeBytes?: number;
+  lastModified: string;
+  author: string;
+  tags?: string[];
+  docContent?: string;
+}
+
+export interface GoogleCalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  type: 'SESSION' | 'ASSESSMENT' | 'SUPERVISION' | 'STAKEHOLDER_MEETING';
+  participantId?: string;
+  participantName?: string;
+  practitionerId: string;
+  practitionerName: string;
+  location: string;
+  status: 'CONFIRMED' | 'TENTATIVE' | 'CANCELLED';
+  description?: string;
+}
+
+export interface PRODABatch {
+  id: string;
+  batchReference: string;
+  createdAt: string;
+  claimCount: number;
+  totalAmount: number;
+  status: 'DRAFT' | 'SCRUBBED_VALID' | 'SUBMITTED' | 'ACCEPTED' | 'REJECTED_PARTIAL';
+  submissionDate?: string;
+  ndiaResponseCode?: string;
+  claimIds: string[];
+  rejectionNotes?: string;
+}
+

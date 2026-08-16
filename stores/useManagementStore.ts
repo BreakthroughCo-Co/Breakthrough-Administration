@@ -16,7 +16,11 @@ import {
   NDISSupportItem,
   AppNotification,
   RestrictivePracticeUsageLog,
-  NDISMonthlyReturnRecord
+  NDISMonthlyReturnRecord,
+  AICopilotMessage,
+  GoogleDriveFile,
+  GoogleCalendarEvent,
+  PRODABatch
 } from '@/types';
 import {
   INITIAL_USERS,
@@ -33,7 +37,11 @@ import {
   INITIAL_BILLING_CLAIMS,
   INITIAL_SUPPORT_ITEMS,
   INITIAL_AUDIT_LOGS,
-  INITIAL_COMMUNICATIONS
+  INITIAL_COMMUNICATIONS,
+  INITIAL_PRODA_BATCHES,
+  INITIAL_DRIVE_FILES,
+  INITIAL_CALENDAR_EVENTS,
+  INITIAL_COPILOT_MESSAGES
 } from '@/lib/mock-data';
 
 import { create } from 'zustand';
@@ -119,6 +127,12 @@ interface ManagementState {
   auditLogs: AuditLog[];
   communications: CommunicationLog[];
   notifications: AppNotification[];
+  prodaBatches: PRODABatch[];
+  googleDriveFiles: GoogleDriveFile[];
+  googleCalendarEvents: GoogleCalendarEvent[];
+  aiCopilotHistory: AICopilotMessage[];
+  isAICopilotOpen: boolean;
+  selectedCopilotClientId: string;
   theme: 'dark' | 'light';
   isCommandPaletteOpen: boolean;
   activeTab: TabType;
@@ -130,6 +144,11 @@ interface ManagementState {
   setUserRole: (role: UserRole) => void;
   toggleTheme: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
+  toggleAICopilot: () => void;
+  setAICopilotOpen: (open: boolean) => void;
+  setSelectedCopilotClientId: (id: string) => void;
+  addAICopilotMessage: (msg: Omit<AICopilotMessage, 'id' | 'timestamp'>) => void;
+  clearAICopilotHistory: () => void;
   markNotificationsRead: () => void;
   dismissNotification: (id: string) => void;
   addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
@@ -156,6 +175,10 @@ interface ManagementState {
   importFbaToBsp: (clientId: string, fba: Partial<NonNullable<BSPDocument['functionalAssessment']>>) => void;
   addBillingClaim: (claim: Omit<BillingClaim, 'id'>) => void;
   updateBillingStatus: (id: string, status: BillingClaim['status']) => void;
+  createPRODABatch: (claimIds: string[]) => PRODABatch;
+  updatePRODABatchStatus: (batchId: string, status: PRODABatch['status'], responseCode?: string, rejectionNotes?: string) => void;
+  addGoogleDriveFile: (file: Omit<GoogleDriveFile, 'id' | 'lastModified'>) => void;
+  addGoogleCalendarEvent: (event: Omit<GoogleCalendarEvent, 'id'>) => void;
   addAuditLog: (action: string, entity: string, entityId: string, details: string) => void;
   addCommunication: (comm: Omit<CommunicationLog, 'id' | 'timestamp'>) => void;
 }
@@ -178,6 +201,12 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   auditLogs: INITIAL_AUDIT_LOGS,
   communications: INITIAL_COMMUNICATIONS,
   notifications: INITIAL_NOTIFICATIONS,
+  prodaBatches: INITIAL_PRODA_BATCHES,
+  googleDriveFiles: INITIAL_DRIVE_FILES,
+  googleCalendarEvents: INITIAL_CALENDAR_EVENTS,
+  aiCopilotHistory: INITIAL_COPILOT_MESSAGES,
+  isAICopilotOpen: false,
+  selectedCopilotClientId: INITIAL_CLIENTS[0]?.id || 'cli-101',
   theme: 'dark',
   isCommandPaletteOpen: false,
   activeTab: 'command-center',
@@ -189,6 +218,23 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
 
   setCommandPaletteOpen: (open: boolean) => set({ isCommandPaletteOpen: open }),
+
+  toggleAICopilot: () => set((state) => ({ isAICopilotOpen: !state.isAICopilotOpen })),
+
+  setAICopilotOpen: (open: boolean) => set({ isAICopilotOpen: open }),
+
+  setSelectedCopilotClientId: (id: string) => set({ selectedCopilotClientId: id }),
+
+  addAICopilotMessage: (msgData) => {
+    const newMsg: AICopilotMessage = {
+      ...msgData,
+      id: `copilot-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: new Date().toISOString(),
+    };
+    set((state) => ({ aiCopilotHistory: [...state.aiCopilotHistory, newMsg] }));
+  },
+
+  clearAICopilotHistory: () => set({ aiCopilotHistory: INITIAL_COPILOT_MESSAGES }),
 
   markNotificationsRead: () =>
     set((state) => ({
@@ -469,6 +515,83 @@ export const useManagementStore = create<ManagementState>((set, get) => ({
       billingClaims: state.billingClaims.map((b) => (b.id === id ? { ...b, status } : b)),
     }));
     get().addAuditLog('Updated Billing Status', 'BillingClaim', id, `Status updated to ${status}`);
+  },
+
+  createPRODABatch: (claimIds: string[]) => {
+    const claims = get().billingClaims.filter((c) => claimIds.includes(c.id));
+    const totalAmount = claims.reduce((sum, c) => sum + c.totalAmount, 0);
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomSuffix = Math.floor(Math.random() * 900 + 100);
+    const newBatch: PRODABatch = {
+      id: `batch-${Date.now()}`,
+      batchReference: `NDIS-B2G-${dateStr}-${randomSuffix}`,
+      createdAt: new Date().toISOString(),
+      claimCount: claims.length,
+      totalAmount,
+      status: 'SCRUBBED_VALID',
+      claimIds,
+    };
+    set((state) => ({
+      prodaBatches: [newBatch, ...state.prodaBatches],
+      billingClaims: state.billingClaims.map((c) =>
+        claimIds.includes(c.id) ? { ...c, status: 'Submitted' } : c
+      ),
+    }));
+    get().addAuditLog(
+      'Created PRODA Bulk Claim Batch',
+      'PRODABatch',
+      newBatch.id,
+      `Generated batch ${newBatch.batchReference} with ${claims.length} claims totaling $${totalAmount.toFixed(2)}`
+    );
+    get().addNotification({
+      title: 'PRODA Payment Batch Created',
+      message: `Batch ${newBatch.batchReference} generated with ${claims.length} scrubbed claims ($${totalAmount.toFixed(2)}).`,
+      type: 'billing',
+      severity: 'medium',
+      linkTab: 'billing',
+    });
+    return newBatch;
+  },
+
+  updatePRODABatchStatus: (batchId, status, responseCode, rejectionNotes) => {
+    set((state) => ({
+      prodaBatches: state.prodaBatches.map((b) =>
+        b.id === batchId
+          ? {
+              ...b,
+              status,
+              ndiaResponseCode: responseCode || b.ndiaResponseCode,
+              rejectionNotes: rejectionNotes || b.rejectionNotes,
+              submissionDate: status === 'SUBMITTED' || status === 'ACCEPTED' ? new Date().toISOString() : b.submissionDate,
+            }
+          : b
+      ),
+    }));
+    get().addAuditLog(
+      'Updated PRODA Batch Status',
+      'PRODABatch',
+      batchId,
+      `Status updated to ${status}${responseCode ? ` (${responseCode})` : ''}`
+    );
+  },
+
+  addGoogleDriveFile: (fileData) => {
+    const newFile: GoogleDriveFile = {
+      ...fileData,
+      id: `drive-${Date.now()}`,
+      lastModified: new Date().toISOString(),
+    };
+    set((state) => ({ googleDriveFiles: [newFile, ...state.googleDriveFiles] }));
+    get().addAuditLog('Saved to Google Drive', 'GoogleDriveFile', newFile.id, `Saved ${newFile.name}`);
+  },
+
+  addGoogleCalendarEvent: (eventData) => {
+    const newEvent: GoogleCalendarEvent = {
+      ...eventData,
+      id: `cal-${Date.now()}`,
+    };
+    set((state) => ({ googleCalendarEvents: [newEvent, ...state.googleCalendarEvents] }));
+    get().addAuditLog('Created Calendar Event', 'GoogleCalendarEvent', newEvent.id, `Scheduled ${newEvent.title}`);
   },
 
   addAuditLog: (action, entity, entityId, details) => {
